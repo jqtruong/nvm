@@ -1,0 +1,11 @@
+#+STARTUP: hidestars
+#+TODO: TODO IN_PROGRESS | DONE
+
+* Summary
+  In honor of my grandfather whose mind was so emcompassing
+  that it left its shell long before his body realized.
+
+* Tasks
+
+** TODO learn some WebGL
+   Start with rotating colorful rectangles.
