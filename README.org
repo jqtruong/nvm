@@ -5,7 +5,10 @@
   In honor of my grandfather whose mind was so emcompassing
   that it left its shell long before his body realized.
 
+* WebGL
+  
+
 * Tasks
 
-** TODO learn some WebGL
+** IN_PROGRESS learn some WebGL
    Start with rotating colorful rectangles.

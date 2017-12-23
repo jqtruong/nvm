@@ -1,5 +1,7 @@
 const Head = document.getElementsByTagName('head')[0],
-      Body = document.body
+      Body = document.body,
+      l = console.log
+
 
 
 window.onload = (e) => {
@@ -41,7 +43,7 @@ window.onload = (e) => {
 }
 
 
-var DOM = (function() {
+var Helpers = (function() {
 
   var d = document
 
@@ -56,21 +58,21 @@ var DOM = (function() {
 const Game = (() => {
   let _id = 0,                  // request frame id
       _loads = [],
-      _looper = () => console.log('you spin me right round'),
+      _looper = () => l('you spin me right round'),
 
       _msPassed = 0,
       _lastMs   = 0,
       _points   = 0
 
   return {
-    points:   () => _points,
+    points: () => _points,
     zeroth: () => Math.ceil(_lastMs*60/1000)%60 == 0,
 
     addLoad: (name, load) => {
       const p = new Promise((resolve, reject) => {
-        const res = load()
-        if (res) resolve(res)
-        else reject(`${name} load failed with ${res}.`)
+        const result = load()
+        if (result) resolve(result)
+        else reject(`${name} load failed with ${result}.`)
       })
       _loads.push(p)
     },
@@ -98,17 +100,12 @@ var Events = (() => {
     switch (e.keyCode) {
 
     case 27:                      // esc
-      console.log(`stopped game at ${Game.stop()}`)
+      l(`stopped game at ${Game.stop()}`)
       break;
 
     default:
-      // console.log(e.keyCode)
+      // l(e.keyCode)
     }
   }
 
 })()
-
-
-// Misc.
-const l = console.log
-const _ = CanvasRenderingContext2D.prototype
