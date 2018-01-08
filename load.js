@@ -2,26 +2,28 @@ const Head = document.getElementsByTagName('head')[0],
       Body = document.body,
       l = console.log
 
+let N = 0,
+    V = ''
 
 
 window.onload = (e) => {
   console.log('main load')
 
-  const n = new URLSearchParams(location.search).get('v') || 1,
-        v = `v${n}`
+  N = new URLSearchParams(location.search).get('v') || 1
+  V = `v${N}`
 
   Promise.all([
     // Load JS
     new Promise((ok, argh) => {
       var script = document.createElement('script')
-      script.src = `${v}.js`
+      script.src = `${V}.js`
       script.onload = () => ok(true)
 
       Body.appendChild(script)
     }),
     new Promise((ok, argh) => {
       var script = document.createElement('script')
-      script.src = `${v}.design.js`
+      script.src = `${V}.design.js`
       script.onload = () => ok(true)
 
       Body.appendChild(script)
@@ -32,14 +34,14 @@ window.onload = (e) => {
       var link = document.createElement('link')
       link.rel = 'stylesheet'
       link.type = 'text/css'
-      link.href = `${v}.css`
+      link.href = `${V}.css`
       link.onload = () => ok(true)
 
       Head.appendChild(link)
     })
   ]).then(() => Game.load())
     .then(() => Game.start())
-    .catch(errors => console.log('Errors:', errors))
+    .catch(err => l(`Game could not start due to ${err}.`))
 }
 
 
@@ -48,6 +50,7 @@ var Helpers = (function() {
   var d = document
 
   return {
+    fakePromise: (msg) => new Promise((res, rej) => rej(msg)),
     getById: (id) => d.getElementById(id),
     get1ByTag: (name) => d.getElementsByTagName(name)[0],
     getAllByTag: (name) => d.getElementsByTagName(name)

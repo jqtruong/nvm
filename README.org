@@ -6,7 +6,49 @@
   that it left its shell long before his body realized.
 
 * WebGL
-  
+
+** [2017-12-27 Wed]
+   i got the canvas almost set up. programs go in there
+   rather fitly, but wondering about buffers and/or
+   variables. in nullprogram's sample code, the variables
+   are attached at render, and, in learningwebgl, they are
+   attached during program inititialization and in render.
+
+** [2017-12-25 Mon]
+   looks like there will be many programs for each thing i
+   want to draw. 
+   
+   WebGL pipeline (high-level):
+   1. Runs the vertex shader on all of the vertices to work
+      out where everything is.
+   2. Linearly interpolates between the vertices, which
+      tells it which fragments (which for the moment you can
+      treat as being the same as pixels) need to be painted.
+   3. For each fragment, run the fragment shader on it to
+      work out its colour.
+   4. Write it to the frame buffer.
+
+*** Variable types
+    - [[https://webglfundamentals.org/webgl/lessons/webgl-shaders-and-glsl.html#attributes][attributes]] :: data pulled from buffers
+    - [[https://webglfundamentals.org/webgl/lessons/webgl-shaders-and-glsl.html#uniforms][uniforms]] :: values that stay the same during for all
+         vertices of a single draw call
+* Refs
+  - http://nullprogram.com/sphere-js/
+  - [[http://learningwebgl.com/blog/?p=859][learningwebgl: blending]]
+
+** Webserver
+   Start a webserver to serve the shader files, just for
+   better legibility.
+
+   #+BEGIN_SRC lisp
+     (ql:quickload :hunchentoot)
+     (hunchentoot:start (make-instance 'hunchentoot:easy-acceptor :port 4242))
+     (push (hunchentoot:create-folder-dispatcher-and-handler
+            "/nvm/" "~/work/gamedev/passed-in-future/nvm/")
+           hunchentoot:*dispatch-table*)
+   #+END_SRC
+
+   then visit http://localhost:4242/nvm/index.html.
 
 * Tasks
 
