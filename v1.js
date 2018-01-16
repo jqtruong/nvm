@@ -14,7 +14,7 @@ const Canvas = (() => {
   _canvas.height = window.innerHeight
 
   function _setupProgram(key, vrt = 'default', frg = 'default') {
-    const checkShader = (shader) => {
+    function checkShader(shader) {
       const error = ! _gl.getShaderParameter(shader, _gl.COMPILE_STATUS)
       if (error) {
         l('Program error with shader:', _gl.getShaderInfoLog(shader))
@@ -25,7 +25,7 @@ const Canvas = (() => {
       return shader
     }
 
-    const compileShader = (type, url) => {
+    function compileShader(type, url) {
       return fetch(url)
         .then((response) => {
           if (!response.ok) {
@@ -50,10 +50,11 @@ const Canvas = (() => {
           frgFile = `${V}.${frg}-frg.c`
 
     return compileShader(_gl.VERTEX_SHADER,   vrtFile)
-      .then((shader) => _gl.attachShader(program, shader))
-      .then(() => compileShader(_gl.FRAGMENT_SHADER, frgFile))
-      .then((shader) => _gl.attachShader(program, shader))
-      .then(() => {
+      .then((vrtShader) => {
+        _gl.attachShader(program, vrtShader)
+        return compileShader(_gl.FRAGMENT_SHADER, frgFile)})
+      .then((frgShader) => {
+        _gl.attachShader(program, frgShader)
         _gl.linkProgram(program)
         if (! _gl.getProgramParameter(program, _gl.LINK_STATUS)) {
           var info = _gl.getProgramInfoLog(program)

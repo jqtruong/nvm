@@ -1,6 +1,7 @@
 const Head = document.getElementsByTagName('head')[0],
       Body = document.body,
-      l = console.log
+      l = console.log,
+      e = console.error
 
 let N = 0,
     V = ''
@@ -73,9 +74,9 @@ const Game = (() => {
 
     addLoad: (name, load) => {
       const p = new Promise((resolve, reject) => {
-        const result = load()
-        if (result) resolve(result)
-        else reject(`${name} load failed with ${result}.`)
+        load()
+          .then(result => resolve(result))
+          .catch(msg => reject(`Error: loading ${name}: ${msg}.`))
       })
       _loads.push(p)
     },
