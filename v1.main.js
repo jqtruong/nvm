@@ -19,7 +19,7 @@ const Canvas = (() => {
       if (error) {
         l('Program error with shader:', _gl.getShaderInfoLog(shader))
         _gl.deleteShader(shader)
-        return Helpers.fakePromise('a bad shader')
+        return Helper.fakePromise('a bad shader')
       }
 
       return shader
@@ -31,7 +31,7 @@ const Canvas = (() => {
           if (!response.ok) {
             let err = 
             l(`Error loading ${url} shader with response: `, response)
-            return Helpers.fakePromise(url)
+            return Helper.fakePromise(url)
           }
 
           return response.text()
@@ -45,7 +45,7 @@ const Canvas = (() => {
         })
     }
 
-    const program = _programs[key] = _gl.createProgram(),
+    const program = _gl.createProgram(),
           vrtFile = `${V}.${vrt}-vrt.c`, // e.g. v1.default-vrt.c
           frgFile = `${V}.${frg}-frg.c`
 
@@ -56,12 +56,15 @@ const Canvas = (() => {
       .then((frgShader) => {
         _gl.attachShader(program, frgShader)
         _gl.linkProgram(program)
+        Programs.init(_gl, key)
         if (! _gl.getProgramParameter(program, _gl.LINK_STATUS)) {
           var info = _gl.getProgramInfoLog(program)
           l('Could not link WebGL program' +
             (info ? `:\n\n${info}` : '.'))
-          return Helpers.fakePromise('bad program') 
+          return Helper.fakePromise('bad program') 
         }
+
+        return true
       })
   }
 
@@ -73,7 +76,53 @@ const Canvas = (() => {
       // TODO for each programs...
       return _setupProgram('test')
     },
-    doSomething: () => l('canvas doSomething stub')
+    render: () => {
+      // Clear
+      _gl.viewport(0, 0, _canvas.width, _canvas.height)
+      _gl.clearColor(0, 0, 0, 1.0)
+      _gl.clear(_gl.COLOR_BUFFER_BIT)
+    }
+  }
+})()
+
+
+const Programs = (() => {
+
+  function _createBuffer(gl) {
+
+  }
+
+  const _keys = {
+    test: (() => {
+      const positions = [
+         0.5,  1,
+        -0.5,  1,
+         0.5, -1,
+        -0.5, -1
+      ]
+
+      let a_position,
+          u_model_matrix,
+          positionBuffer
+
+      return {
+        init: (gl, program) => {
+          a_position = gl.getAttribLocation(program, 'a_position')
+          u_model_matrix = gl.getAttribLocation(program, 'u_model_matrix')
+
+          positionBuffer = _createBuffer(gl)
+        },
+
+        run: (gl, program) => {
+          
+        }
+      }
+    })()
+  }
+
+  return {
+    init: (gl, program, key) => _keys[key].init(gl, program),
+    run:  (gl, program, key) => _keys[key].run(gl, program)
   }
 })()
 
@@ -85,7 +134,7 @@ const Frame = (() => {
   }
 
   const _render = () => {
-    Canvas.doSomething()
+    Canvas.render()
   }
 
   return {

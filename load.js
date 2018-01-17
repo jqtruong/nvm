@@ -15,20 +15,8 @@ window.onload = (e) => {
 
   Promise.all([
     // Load JS
-    new Promise((ok, argh) => {
-      var script = document.createElement('script')
-      script.src = `${V}.js`
-      script.onload = () => ok(true)
-
-      Body.appendChild(script)
-    }),
-    new Promise((ok, argh) => {
-      var script = document.createElement('script')
-      script.src = `${V}.design.js`
-      script.onload = () => ok(true)
-
-      Body.appendChild(script)
-    }),
+    Helper.loadScript('main'),
+    Helper.loadScript('design'),
 
     // Load CSS
     new Promise((ok, argh) => {
@@ -41,12 +29,12 @@ window.onload = (e) => {
       Head.appendChild(link)
     })
   ]).then(() => Game.load())
-    .then(() => Game.start())
+    // .then(() => Game.start())
     .catch(err => l(`Game could not start due to ${err}.`))
 }
 
 
-var Helpers = (function() {
+var Helper = (function() {
 
   var d = document
 
@@ -54,7 +42,14 @@ var Helpers = (function() {
     fakePromise: (msg) => new Promise((res, rej) => rej(msg)),
     getById: (id) => d.getElementById(id),
     get1ByTag: (name) => d.getElementsByTagName(name)[0],
-    getAllByTag: (name) => d.getElementsByTagName(name)
+    getAllByTag: (name) => d.getElementsByTagName(name),
+    loadScript: (name) => new Promise((ok, argh) => {
+      var script = document.createElement('script')
+      script.src = `${V}.${name}.js`
+      script.onload = () => ok(true)
+
+      Body.appendChild(script)
+    })
   }
 })()
 
@@ -72,9 +67,9 @@ const Game = (() => {
     points: () => _points,
     zeroth: () => Math.ceil(_lastMs*60/1000)%60 == 0,
 
-    addLoad: (name, load) => {
+    addLoad: (name, loader) => {
       const p = new Promise((resolve, reject) => {
-        load()
+        loader()
           .then(result => resolve(result))
           .catch(msg => reject(`Error: loading ${name}: ${msg}.`))
       })
