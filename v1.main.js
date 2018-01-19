@@ -1,25 +1,73 @@
 const Canvas = (() => {
   const _canvas = document.createElement('canvas'),
-        _gl = _canvas.getContext('webgl'),
-        _programs = {}
+        _gl = _canvas.getContext('webgl');
 
-  var _vertShader, _fragShader
+  /////////////////////////////////////////
 
-  if (!_gl) {
-    alert('Unable to initialize WebGL. Your browser or machine may not support it.')
-    return {}
-  }
+  return {
+    gl: _gl,
+    load: () => new Promise((resolve, reject) => {
+      if (!_gl) {
+        reject('Unable to initialize WebGL; check browser compatibility.');
+      }
 
-  _canvas.width  = window.innerWidth
-  _canvas.height = window.innerHeight
+      _canvas.width  = window.innerWidth;
+      _canvas.height = window.innerHeight;
 
-  function _setupProgram(key, vrt = 'default', frg = 'default') {
+      if (Body.appendChild(_canvas)) resolve();
+      else reject('could not append canvas');
+    })
+      .then(Programs.load),
+    render: () => {
+      // Clear
+      _gl.viewport(0, 0, _canvas.width, _canvas.height)
+      _gl.clearColor(0, 0, 0, 1.0)
+      _gl.clear(_gl.COLOR_BUFFER_BIT)
+    }
+  };
+})();
+
+
+// @NOTE: Dependent on the Canvas being loaded first!
+const Programs = (() => {
+
+  const _programs = {
+    test: (() => {
+      const positions = [
+        0.5,  1,
+        -0.5,  1,
+        0.5, -1,
+        -0.5, -1
+      ];
+
+      let _program,
+          a_position,
+          u_model_matrix,
+          positionBuffer;
+
+      return {
+        init: (program) => {
+          _program = program;
+          a_position = Canvas.gl.getAttribLocation(program, 'a_position');
+          u_model_matrix = Canvas.gl.getAttribLocation(program, 'u_model_matrix');
+
+          positionBuffer = _createBuffer();
+        },
+
+        run: () => {
+          
+        }
+      };
+    })()
+  };
+
+  function _setup(key, vrt = 'default', frg = 'default') {
     function checkShader(shader) {
-      const error = ! _gl.getShaderParameter(shader, _gl.COMPILE_STATUS)
+      const error = ! Canvas.gl.getShaderParameter(shader, Canvas.gl.COMPILE_STATUS)
       if (error) {
-        l('Program error with shader:', _gl.getShaderInfoLog(shader))
-        _gl.deleteShader(shader)
-        return Helper.fakePromise('a bad shader')
+        l('Program error with shader:', Canvas.gl.getShaderInfoLog(shader))
+        Canvas.gl.deleteShader(shader)
+        return Helper.rejectPromise('a bad shader')
       }
 
       return shader
@@ -30,101 +78,55 @@ const Canvas = (() => {
         .then((response) => {
           if (!response.ok) {
             let err = 
-            l(`Error loading ${url} shader with response: `, response)
-            return Helper.fakePromise(url)
+                l(`Error loading ${url} shader with response: `, response);
+            return Helper.rejectPromise(url);
           }
 
-          return response.text()
+          return response.text();
         })
         .then((source) => {
-          const shader = _gl.createShader(type)
-          _gl.shaderSource(shader, source)
-          _gl.compileShader(shader)
+          const shader = Canvas.gl.createShader(type);
+          Canvas.gl.shaderSource(shader, source);
+          Canvas.gl.compileShader(shader);
 
-          return checkShader(shader)
-        })
+          return checkShader(shader);
+        });
     }
 
-    const program = _gl.createProgram(),
+    const program = Canvas.gl.createProgram(),
           vrtFile = `${V}.${vrt}-vrt.c`, // e.g. v1.default-vrt.c
-          frgFile = `${V}.${frg}-frg.c`
+          frgFile = `${V}.${frg}-frg.c`;
 
-    return compileShader(_gl.VERTEX_SHADER,   vrtFile)
+    return compileShader(Canvas.gl.VERTEX_SHADER, vrtFile)
       .then((vrtShader) => {
-        _gl.attachShader(program, vrtShader)
-        return compileShader(_gl.FRAGMENT_SHADER, frgFile)})
+        Canvas.gl.attachShader(program, vrtShader);
+        return compileShader(Canvas.gl.FRAGMENT_SHADER, frgFile);
+      })
       .then((frgShader) => {
-        _gl.attachShader(program, frgShader)
-        _gl.linkProgram(program)
-        Programs.init(_gl, key)
-        if (! _gl.getProgramParameter(program, _gl.LINK_STATUS)) {
-          var info = _gl.getProgramInfoLog(program)
+        Canvas.gl.attachShader(program, frgShader);
+        Canvas.gl.linkProgram(program);
+
+        if (! Canvas.gl.getProgramParameter(program, Canvas.gl.LINK_STATUS)) {
+          var info = Canvas.gl.getProgramInfoLog(program);
           l('Could not link WebGL program' +
-            (info ? `:\n\n${info}` : '.'))
-          return Helper.fakePromise('bad program') 
+            (info ? `:\n\n${info}` : '.'));
+          return Helper.rejectPromise('bad program') ;
         }
 
-        return true
-      })
+        return _programs[key].init(program);
+      });
   }
 
-  /////////////////////////////////////////
+  function _createBuffer(gl) {
+    
+  }
 
   return {
     load: () => {
-      Body.appendChild(_canvas)
-      // TODO for each programs...
-      return _setupProgram('test')
-    },
-    render: () => {
-      // Clear
-      _gl.viewport(0, 0, _canvas.width, _canvas.height)
-      _gl.clearColor(0, 0, 0, 1.0)
-      _gl.clear(_gl.COLOR_BUFFER_BIT)
+      
     }
-  }
-})()
-
-
-const Programs = (() => {
-
-  function _createBuffer(gl) {
-
-  }
-
-  const _keys = {
-    test: (() => {
-      const positions = [
-         0.5,  1,
-        -0.5,  1,
-         0.5, -1,
-        -0.5, -1
-      ]
-
-      let a_position,
-          u_model_matrix,
-          positionBuffer
-
-      return {
-        init: (gl, program) => {
-          a_position = gl.getAttribLocation(program, 'a_position')
-          u_model_matrix = gl.getAttribLocation(program, 'u_model_matrix')
-
-          positionBuffer = _createBuffer(gl)
-        },
-
-        run: (gl, program) => {
-          
-        }
-      }
-    })()
-  }
-
-  return {
-    init: (gl, program, key) => _keys[key].init(gl, program),
-    run:  (gl, program, key) => _keys[key].run(gl, program)
-  }
-})()
+  };
+})();
 
 
 const Frame = (() => {
@@ -150,7 +152,7 @@ const Frame = (() => {
 const V1 = (() => {
   l('Game v1...')
 
-  Game.addLoad('Canvas', Canvas.load)
+  Game.addLoad('Canvas and Programs', Canvas.load)
   Game.setLoop(Frame.next)
 })()
 

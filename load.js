@@ -13,13 +13,10 @@ window.onload = (e) => {
   N = new URLSearchParams(location.search).get('v') || 1
   V = `v${N}`
 
-  Promise.all([
-    // Load JS
-    Helper.loadScript('main'),
-    Helper.loadScript('design'),
-
-    // Load CSS
-    new Promise((ok, argh) => {
+  // Load JS and CSS
+  Helper.loadScript('main')
+    .then(() => Helper.loadScript('design'))
+    .then(() => new Promise((ok, argh) => {
       var link = document.createElement('link')
       link.rel = 'stylesheet'
       link.type = 'text/css'
@@ -27,8 +24,8 @@ window.onload = (e) => {
       link.onload = () => ok(true)
 
       Head.appendChild(link)
-    })
-  ]).then(() => Game.load())
+    }))
+    .then(() => Game.load())
     // .then(() => Game.start())
     .catch(err => l(`Game could not start due to ${err}.`))
 }
@@ -39,7 +36,7 @@ var Helper = (function() {
   var d = document
 
   return {
-    fakePromise: (msg) => new Promise((res, rej) => rej(msg)),
+    rejectPromise: (msg) => new Promise((res, rej) => rej(msg)),
     getById: (id) => d.getElementById(id),
     get1ByTag: (name) => d.getElementsByTagName(name)[0],
     getAllByTag: (name) => d.getElementsByTagName(name),
@@ -56,26 +53,29 @@ var Helper = (function() {
 
 const Game = (() => {
   let _id = 0,                  // request frame id
-      _loads = [],
+      _loads = {},
       _looper = () => l('you spin me right round'),
 
       _msPassed = 0,
       _lastMs   = 0,
-      _points   = 0
+      _points   = 0;
 
   return {
     points: () => _points,
     zeroth: () => Math.ceil(_lastMs*60/1000)%60 == 0,
 
     addLoad: (name, loader) => {
-      const p = new Promise((resolve, reject) => {
-        loader()
-          .then(result => resolve(result))
-          .catch(msg => reject(`Error: loading ${name}: ${msg}.`))
-      })
-      _loads.push(p)
+      _loads[name] = {
+        promise: loader()
+          .then(result => {
+            l(`${name} loaded`)
+            return result;
+          })
+          .catch(msg => l(`Error: loading ${name}: ${msg}.`)),
+        loaded: false
+      };
     },
-    load: () => Promise.all(_loads),
+    load: () => Promise.all(Object.keys(_loads).map(k => _loads[k].promise)),
 
     setLoop: (f) => _looper = f,
     loop: (ms) => {
