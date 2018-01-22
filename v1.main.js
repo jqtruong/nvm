@@ -1,32 +1,32 @@
 const Canvas = (() => {
-  const _canvas = document.createElement('canvas'),
-        _gl = _canvas.getContext('webgl');
+  const canvas = document.createElement('canvas'),
+        gl = canvas.getContext('webgl')
 
-  const _loadPromise = () => new Promise((resolve, reject) => {
-    if (!_gl) {
+  const loadPromise = () => new Promise((resolve, reject) => {
+    if (!gl) {
       reject('Unable to initialize WebGL; check browser compatibility.');
     }
 
-    _canvas.width  = window.innerWidth;
-    _canvas.height = window.innerHeight;
+    canvas.width  = window.innerWidth;
+    canvas.height = window.innerHeight;
 
-    if (Body.appendChild(_canvas)) resolve();
+    if (Body.appendChild(canvas)) resolve();
     else reject('could not append canvas');
   });
 
   /////////////////////////////////////////
 
   return {
-    gl: _gl,
-    load: () => _loadPromise().then(Programs.load),
+    gl: gl,
+    load: () => loadPromise().then(Programs.load),
     render: () => {
       // Clear
-      _gl.viewport(0, 0, _canvas.width, _canvas.height);
-      _gl.clearColor(0.0, 0.0, 0.0, 1.0); // Clear to black, fully opaque
-      _gl.clearDepth(1.0);                // Clear everything
-      _gl.enable(_gl.DEPTH_TEST);         // Enable depth testing
-      _gl.depthFunc(_gl.LEQUAL);          // Near things obscure
-      _gl.clear(_gl.COLOR_BUFFER_BIT | _gl.DEPTH_BUFFER_BIT);
+      gl.viewport(0, 0, canvas.width, canvas.height);
+      gl.clearColor(0.0, 0.0, 0.0, 1.0); // Clear to black, fully opaque
+      gl.clearDepth(1.0);                // Clear everything
+      gl.enable(gl.DEPTH_TEST);          // Enable depth testing
+      gl.depthFunc(gl.LEQUAL);           // Near things obscure
+      gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     }
   };
 })();
@@ -35,23 +35,12 @@ const Canvas = (() => {
 // @NOTE: Dependent on the Canvas being loaded first!
 const Programs = (() => {
 
-  let _gl = null;
-
-  const _loadPromise = (gl) => new Promise((resolve, reject) => {
-    if (gl) {
-      _gl = gl;
-      resolve();
-    } else {
-      reject(Helper.rejectPromise('no gl context'));
-    }
-  }
-
-  const _programs = {
+  const programs = {
     test: (() => {
       const positions = [
-         0.5,  1,
+        0.5,  1,
         -0.5,  1,
-         0.5, -1,
+        0.5, -1,
         -0.5, -1
       ];
       const colors = [
@@ -61,137 +50,151 @@ const Programs = (() => {
         0.0,  0.0,  1.0,  1.0,  // blue
       ];
 
-      let _program,
+      let program,
           a_position,
           a_color,
           u_model_matrix,
           positionBuffer,
           colorBuffer;
 
+      const finishInit = (glProgram) => {
+        program = glProgram
+        a_position = Canvas.gl.getAttribLocation(program, 'a_position');
+        a_color = Canvas.gl.getAttribLocation(program, 'a_color');
+        u_model_matrix = Canvas.gl.getAttribLocation(program,
+                                                     'u_model_matrix');
+
+        positionBuffer = GlProgram.createBuffer(positions);
+        colorBuffer = GlProgram.createBuffer(colors);
+      };
+
       return {
-        init: (program) => {
-          _program = program;
-          a_position = _gl.getAttribLocation(program, 'a_position');
-          a_color = _gl.getAttribLocation(program, 'a_color');
-          u_model_matrix = _gl.getAttribLocation(program, 'u_model_matrix');
-
-          positionBuffer = _createBuffer(positions);
-          colorBuffer = _createBuffer(colors);
-        },
-
-        run: () => {
-          
-        }
+        init: () => GlProgram.setup().then(finishInit),
+        run:  () => {}
       };
     })()
   };
 
-  function _setup(key, vrt = 'default', frg = 'default') {
-    function checkShader(shader) {
-      const error = ! _gl.getShaderParameter(shader, _gl.COMPILE_STATUS)
-      if (error) {
-        l('Program error with shader:', _gl.getShaderInfoLog(shader))
-        _gl.deleteShader(shader)
-        return Helper.rejectPromise('a bad shader')
-      }
+  return {
+    load: () => programs.test.init()
+  };
+})();
 
-      return shader
+
+const GlProgram = (() => {
+
+  // let gl = null;
+
+  // const loadPromise = (canvasGl) => new Promise((resolve, reject) => {
+  //   if (canvasGl) {
+  //     gl = canvasGl;
+  //     resolve();
+  //   } else {
+  //     reject(Helper.rejectPromise('no gl context'));
+  //   }
+  // });
+
+  if (!Canvas.gl) {
+    e("Canvas must load first to expose it's gl context");
+    return false;
+  }
+
+  function checkShader(shader) {
+    const status = Canvas.gl.getShaderParameter(shader,
+                                                Canvas.gl.COMPILE_STATUS);
+    if (!status) {
+      e('Program error with shader:', Canvas.gl.getShaderInfoLog(shader));
+      Canvas.gl.deleteShader(shader);
+      return Helper.rejectPromise('a bad shader');
     }
 
-    function compileShader(type, url) {
-      return fetch(url)
-        .then((response) => {
-          if (!response.ok) {
-            let err = 
-                l(`Error loading ${url} shader with response: `, response);
-            return Helper.rejectPromise(url);
-          }
+    return shader;
+  }
 
-          return response.text();
-        })
-        .then((source) => {
-          const shader = _gl.createShader(type);
-          _gl.shaderSource(shader, source);
-          _gl.compileShader(shader);
+  function compileShader(type, url) {
+    return fetch(url)
+      .then(response => {
+        if (!response.ok) {
+          let err = 
+              l(`Error loading ${url} shader with response: `, response);
+          return Helper.rejectPromise(url);
+        }
 
-          return checkShader(shader);
-        });
-    }
+        return response.text();
+      })
+      .then(source => {
+        const shader = Canvas.gl.createShader(type);
+        Canvas.gl.shaderSource(shader, source);
+        Canvas.gl.compileShader(shader);
 
-    const program = _gl.createProgram(),
+        return checkShader(shader);
+      });
+  }
+
+  function _setup(vrt = 'default', frg = 'default') {
+    const program = Canvas.gl.createProgram(),
           vrtFile = `${V}.${vrt}-vrt.c`, // e.g. v1.default-vrt.c
           frgFile = `${V}.${frg}-frg.c`;
 
-    return compileShader(_gl.VERTEX_SHADER, vrtFile)
-      .then((vrtShader) => {
-        _gl.attachShader(program, vrtShader);
-        return compileShader(_gl.FRAGMENT_SHADER, frgFile);
+    return compileShader(Canvas.gl.VERTEX_SHADER, vrtFile)
+      .then(vrtShader => {
+        Canvas.gl.attachShader(program, vrtShader);
+        return compileShader(Canvas.gl.FRAGMENT_SHADER, frgFile);
       })
-      .then((frgShader) => {
-        _gl.attachShader(program, frgShader);
-        _gl.linkProgram(program);
+      .then(frgShader => {
+        Canvas.gl.attachShader(program, frgShader);
+        Canvas.gl.linkProgram(program);
 
-        if (! _gl.getProgramParameter(program, _gl.LINK_STATUS)) {
-          var info = _gl.getProgramInfoLog(program);
-          l('Could not link WebGL program' +
-            (info ? `:\n\n${info}` : '.'));
+        if (! Canvas.gl.getProgramParameter(program,
+                                            Canvas.gl.LINK_STATUS)) {
+          var info = Canvas.gl.getProgramInfoLog(program);
+          e('Could not link WebGL program' + (info ? `:\n\n${info}` : '.'));
           return Helper.rejectPromise('bad program') ;
         }
 
-        return _programs[key].init(program);
+        return program;
       });
   }
 
   function _createBuffer(data) {
-    let buffer = _gl.createBuffer();
-    _gl.bindBuffer(_gl.ARRAY_BUFFER, buffer);
-    _gl.bufferData(_gl.ARRAY_BUFFER, new Float32Array(data), gl.STATIC_DRAW);
+    let buffer = Canvas.gl.createBuffer();
+    Canvas.gl.bindBuffer(Canvas.gl.ARRAY_BUFFER, buffer);
+    Canvas.gl.bufferData(Canvas.gl.ARRAY_BUFFER, new Float32Array(data),
+                         Canvas.gl.STATIC_DRAW);
 
     return buffer;
   }
 
   return {
-    load: (gl) => _loadPromise(gl)
+    setup: _setup,
+    createBuffer: _createBuffer
   };
 })();
 
 
 const Frame = (() => {
 
-  const _update = () => {
+  const update = () => {
 
-  }
+  };
 
-  const _render = () => {
-    Canvas.render()
-  }
+  const render = () => {
+    Canvas.render();
+  };
 
   return {
     next: (ms) => {
-      Game.loop(ms)
-      _update()
-      _render()
+      Game.loop(ms);
+      update();
+      render();
     }
-  }
-})()
+  };
+})();
 
 
 const V1 = (() => {
   l('Game v1...')
 
-  Game.addLoad('Canvas and Programs', Canvas.load)
-  Game.setLoop(Frame.next)
-})()
-
-// 
-// var Test = (() => {
-//   function deLoop(ms) {
-//     Game.loop(deLoop)
-//   }
-
-//   return {
-//     go: () => Game.loop(deLoop)
-//   }
-// })()
-
-// Test.go()
+  Game.addLoad('Canvas and Programs', Canvas.load);
+  Game.setLoop(Frame.next);
+})();

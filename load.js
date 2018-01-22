@@ -53,7 +53,7 @@ var Helper = (function() {
 
 const Game = (() => {
   let _id = 0,                  // request frame id
-      _loads = {},
+      _loads = [],
       _looper = () => l('you spin me right round'),
 
       _msPassed = 0,
@@ -65,17 +65,17 @@ const Game = (() => {
     zeroth: () => Math.ceil(_lastMs*60/1000)%60 == 0,
 
     addLoad: (name, loader) => {
-      _loads[name] = {
-        promise: loader()
+      _loads.push({
+        name: name,
+        promise: () => loader()
           .then(result => {
             l(`${name} loaded`)
             return result;
           })
-          .catch(msg => l(`Error: loading ${name}: ${msg}.`)),
-        loaded: false
-      };
+          .catch(msg => l(`Error: loading ${name}: ${msg}.`))
+      });
     },
-    load: () => Promise.all(Object.keys(_loads).map(k => _loads[k].promise)),
+    load: () => Promise.all(_loads.map(l => l.promise())),
 
     setLoop: (f) => _looper = f,
     loop: (ms) => {
