@@ -27,7 +27,7 @@ window.onload = (e) => {
       Head.appendChild(link)
     }))
     .then(() => Game.load())
-    // .then(() => Game.start())
+    .then(() => Game.start())
     .catch(err => l(`Game could not start due to ${err}.`))
 }
 

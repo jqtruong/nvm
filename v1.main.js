@@ -1,35 +1,31 @@
 const Canvas = (() => {
-  const canvas = document.createElement('canvas'),
-        gl = canvas.getContext('webgl');
+  const canvas = document.createElement('canvas');
 
-  const loadPromise = () => new Promise((resolve, reject) => {
-    canvas.width  = window.innerWidth;
-    canvas.height = window.innerHeight;
-    Body.appendChild(canvas);
+  function loadPromise() {
+    return new Promise((resolve, reject) => {
+      canvas.width  = window.innerWidth;
+      canvas.height = window.innerHeight;
+      Body.appendChild(canvas);
 
-    if (!gl) {
-      reject('Unable to initialize WebGL; check browser compatibility.');
-    }
+      this.gl = canvas.getContext('webgl');
+      this.width = canvas.width;
+      this.height = canvas.height;
 
-    resolve();
-  });
+      if (!this.gl) {
+        reject('Unable to initialize WebGL; check browser compatibility.');
+      }
+
+      resolve();
+    });
+  }
 
   /////////////////////////////////////////
 
   return {
-    gl: gl,
-    load: () => loadPromise().then(Programs.load),
-    render: () => {
-      // Clear
-      gl.viewport(0, 0, canvas.width, canvas.height);
-      gl.clearColor(0.0, 0.0, 0.0, 1.0); // Clear to black, fully opaque
-      gl.clearDepth(1.0);                // Clear everything
-      gl.enable(gl.DEPTH_TEST);          // Enable depth testing
-      gl.depthFunc(gl.LEQUAL);           // Near things obscure
-      gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-
-      Programs.run();
-    }
+    gl: null,
+    width: 0,
+    height: 0,
+    load: () => loadPromise.call(Canvas)
   };
 })();
 
@@ -56,53 +52,65 @@ const Programs = (() => {
           a_position,
           a_color,
           u_model_matrix,
+          u_view_matrix,
+          u_projection_matrix,
           positionBuffer,
           colorBuffer;
 
       const finishInit = (glProgram) => {
-        program = glProgram
-        a_position = Canvas.gl.getAttribLocation(program, 'a_position');
-        a_color = Canvas.gl.getAttribLocation(program, 'a_color');
-        u_model_matrix = Canvas.gl.getAttribLocation(program,
-                                                     'u_model_matrix');
+        const gl = Canvas.gl;
+
+        program = glProgram;
+        a_position = gl.getAttribLocation(program, 'a_position');
+        a_color = gl.getAttribLocation(program, 'a_color');
+
+        u_model_matrix = gl.getUniformLocation(program, 'u_model_matrix');
+        u_view_matrix = gl.getUniformLocation(program, 'u_view_matrix');
+        u_projection_matrix = gl.getUniformLocation(program,
+                                                   'u_projection_matrix');
 
         positionBuffer = GlProgram.createBuffer(positions);
         colorBuffer = GlProgram.createBuffer(colors);
       };
 
       return {
-        init: () => GlProgram.setup().then(finishInit),
-        run:  () => {
-          
+        init: function() { return GlProgram.setup().then(finishInit) },
+        prep:  function() {
+          const gl = Canvas.gl;
+          const numComponents = 2;
+          const type = gl.FLOAT;
+          const normalize = false;
+          const stride = 0;
+          const offset = 0;
+          gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+          gl.vertexAttribPointer(
+            a_position,
+            numComponents,
+            type,
+            normalize,
+            stride,
+            offset);
+          gl.enableVertexAttribArray(a_position);
+
+          gl.useProgram(program);
+          gl.uniformMatrix4fv(u_projection_matrix,
+                              false,
+                              Matrix.projection);
+
+          // @TODO draw here
         }
       };
     })()
   };
 
   return {
-    load: () => programs.test.init(),
-    run:  () => programs.test.run()
+    load: programs.test.init,
+    prep:  programs.test.prep
   };
 })();
 
 
 const GlProgram = (() => {
-
-  // let gl = null;
-
-  // const loadPromise = (canvasGl) => new Promise((resolve, reject) => {
-  //   if (canvasGl) {
-  //     gl = canvasGl;
-  //     resolve();
-  //   } else {
-  //     reject(Helper.rejectPromise('no gl context'));
-  //   }
-  // });
-
-  if (!Canvas.gl) {
-    e("Canvas must load first to expose it's gl context");
-    return false;
-  }
 
   function checkShader(shader) {
     const status = Canvas.gl.getShaderParameter(shader,
@@ -137,22 +145,22 @@ const GlProgram = (() => {
   }
 
   function _setup(vrt = 'default', frg = 'default') {
-    const program = Canvas.gl.createProgram(),
+    const gl = Canvas.gl,
+          program = gl.createProgram(),
           vrtFile = `${V}.${vrt}-vrt.c`, // e.g. v1.default-vrt.c
           frgFile = `${V}.${frg}-frg.c`;
 
-    return compileShader(Canvas.gl.VERTEX_SHADER, vrtFile)
+    return compileShader(gl.VERTEX_SHADER, vrtFile)
       .then(vrtShader => {
-        Canvas.gl.attachShader(program, vrtShader);
-        return compileShader(Canvas.gl.FRAGMENT_SHADER, frgFile);
+        gl.attachShader(program, vrtShader);
+        return compileShader(gl.FRAGMENT_SHADER, frgFile);
       })
       .then(frgShader => {
-        Canvas.gl.attachShader(program, frgShader);
-        Canvas.gl.linkProgram(program);
-
-        if (! Canvas.gl.getProgramParameter(program,
-                                            Canvas.gl.LINK_STATUS)) {
-          var info = Canvas.gl.getProgramInfoLog(program);
+        gl.attachShader(program, frgShader);
+        gl.linkProgram(program);
+        const status = gl.getProgramParameter(program, gl.LINK_STATUS)
+        if (! status) {
+          var info = gl.getProgramInfoLog(program);
           e('Could not link WebGL program' + (info ? `:\n\n${info}` : '.'));
           return Helper.rejectPromise('bad program') ;
         }
@@ -179,18 +187,26 @@ const GlProgram = (() => {
 
 const Frame = (() => {
 
-  const update = () => {
+  function readyGl() {
+    const gl = Canvas.gl;
+    // Clear
+    gl.viewport(0, 0, Canvas.width, Canvas.height);
+    gl.clearColor(0.0, 0.0, 0.0, 1.0); // Clear to black, fully opaque
+    gl.clearDepth(1.0);                // Clear everything
+    gl.enable(gl.DEPTH_TEST);          // Enable depth testing
+    gl.depthFunc(gl.LEQUAL);           // Near things obscure
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+  }
 
-  };
-
-  const render = () => {
-    Canvas.render();
-  };
+  function render() {
+    readyGl();
+    Programs.prep();
+    Canvas.gl.drawArrays(Canvas.gl.TRIANGLE_STRIP, 0, 4);
+  }
 
   return {
-    next: (ms) => {
+    next: function(ms) {
       Game.loop(ms);
-      update();
       render();
     }
   };
@@ -200,6 +216,11 @@ const Frame = (() => {
 const V1 = (() => {
   l('Game v1...')
 
-  Game.addLoad('Canvas and Programs', Canvas.load);
+  Game.addLoad('Canvas and Programs', function() {
+    return Canvas.load()
+      .then(Programs.load)
+      .then(Matrix.load)
+  });
+
   Game.setLoop(Frame.next);
 })();
