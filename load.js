@@ -16,6 +16,7 @@ window.onload = (e) => {
   // Load JS and CSS
   Helper.loadScript('main')
     .then(() => Helper.loadScript('design'))
+    .then(() => Helper.loadScript('matrix'))
     .then(() => new Promise((ok, argh) => {
       var link = document.createElement('link')
       link.rel = 'stylesheet'

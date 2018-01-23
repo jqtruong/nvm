@@ -1,17 +1,17 @@
 const Canvas = (() => {
   const canvas = document.createElement('canvas'),
-        gl = canvas.getContext('webgl')
+        gl = canvas.getContext('webgl');
 
   const loadPromise = () => new Promise((resolve, reject) => {
+    canvas.width  = window.innerWidth;
+    canvas.height = window.innerHeight;
+    Body.appendChild(canvas);
+
     if (!gl) {
       reject('Unable to initialize WebGL; check browser compatibility.');
     }
 
-    canvas.width  = window.innerWidth;
-    canvas.height = window.innerHeight;
-
-    if (Body.appendChild(canvas)) resolve();
-    else reject('could not append canvas');
+    resolve();
   });
 
   /////////////////////////////////////////
@@ -27,6 +27,8 @@ const Canvas = (() => {
       gl.enable(gl.DEPTH_TEST);          // Enable depth testing
       gl.depthFunc(gl.LEQUAL);           // Near things obscure
       gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+      Programs.run();
     }
   };
 })();
@@ -70,13 +72,16 @@ const Programs = (() => {
 
       return {
         init: () => GlProgram.setup().then(finishInit),
-        run:  () => {}
+        run:  () => {
+          
+        }
       };
     })()
   };
 
   return {
-    load: () => programs.test.init()
+    load: () => programs.test.init(),
+    run:  () => programs.test.run()
   };
 })();
 
