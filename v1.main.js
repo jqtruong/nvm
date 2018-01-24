@@ -112,6 +112,7 @@ const Programs = (() => {
                               false,
                               Matrix.projection);
           // @TODO draw here
+          Canvas.gl.drawArrays(Canvas.gl.TRIANGLE_STRIP, 0, 4);
         }
       };
     })()
@@ -119,7 +120,7 @@ const Programs = (() => {
 
   return {
     load: programs.test.init,
-    prep:  programs.test.prep
+    prep: programs.test.prep
   };
 })();
 
@@ -215,7 +216,6 @@ const Frame = (() => {
   function render() {
     readyGl();
     Programs.prep();
-    Canvas.gl.drawArrays(Canvas.gl.TRIANGLE_STRIP, 0, 4);
   }
 
   return {

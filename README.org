@@ -7,6 +7,24 @@
 
 * WebGL
 
+** [2018-01-25 Thu]
+   .o0(i really need to remember to write my journey through
+   this project down each day...)
+
+   i got to a point where i can draw a rectangle but not
+   without problems. i'm only sending 2 components, x and y,
+   in the buffer, just like in the demo but somehow the
+   latter works with a =vec4= position attribute but not
+   mine; i have to make it a =vec2= and fill it up to a
+   =vec4=. So far, this is a mystery but i need to move on,
+   and history tells me that i will figure it out someday.
+
+   i need to move =gl= functions into its own
+   library. keeping the context in =Canvas= is more
+   typing... 
+
+   then add a rotation to the rectangle.
+
 ** [2017-12-27 Wed]
    i got the canvas almost set up. programs go in there
    rather fitly, but wondering about buffers and/or
@@ -32,6 +50,21 @@
     - [[https://webglfundamentals.org/webgl/lessons/webgl-shaders-and-glsl.html#attributes][attributes]] :: data pulled from buffers
     - [[https://webglfundamentals.org/webgl/lessons/webgl-shaders-and-glsl.html#uniforms][uniforms]] :: values that stay the same during for all
          vertices of a single draw call
+
+** Topics
+
+*** [[https://webglfundamentals.org/webgl/lessons/webgl-drawing-multiple-things.html][Drawing multiple things]]
+    For each thing you want to draw
+    - call =gl.useProgram= for the program needed to draw.
+    - setup attributes for the thing you want to draw for
+      each attribute call =gl.bindBuffer=,
+      =gl.vertexAttribPointer=, =gl.enableVertexAttribArray=
+    - setup uniforms for the thing you want to draw
+    - call =gl.uniformXXX= for each uniform
+    - call =gl.activeTexture= and =gl.bindTexture= to assign
+      textures to texture units.
+    - call =gl.drawArrays= or =gl.drawElements=
+
 * Refs
   - http://nullprogram.com/sphere-js/
   - [[http://learningwebgl.com/blog/?p=859][learningwebgl: blending]]
