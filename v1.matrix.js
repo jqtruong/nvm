@@ -1,21 +1,9 @@
-String.prototype.toMatrix = function(n) {
-  let mat = new Float32Array(n)
-  this
-    .replace(/[\n ]+/g, ' ')
-    .split(' ')
-    .forEach((s, i) => {
-      mat[i] = parseFloat(s)
-    });
-
-  return mat;
-};
-
 const Matrix = (() => {
 
   const id = `1 0 0 0
               0 1 0 0
               0 0 1 0
-              0 0 0 1`.toMatrix(16);
+              0 0 0 1`.toFloat32Array();
 
   function getPerspective() {
     // @TODO get some "perspective" on these
@@ -31,7 +19,7 @@ const Matrix = (() => {
     return `${f/aspect}    0          0  0
                       0 ${f}          0  0
                       0    0 ${zSum*nf} -1
-                      0    0  ${2*zAll}  0`.toMatrix(16);
+                      0    0  ${2*zAll}  0`.toFloat32Array();
   };
 
   function loadPromise() {
@@ -44,6 +32,7 @@ const Matrix = (() => {
   return {
     identity: id.slice(),
     projection: [],
+    translate: () => {},
     load: () => loadPromise.call(Matrix)
   };
 })();

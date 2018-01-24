@@ -109,3 +109,13 @@ var Events = (() => {
   }
 
 })()
+
+
+String.prototype.toFloat32Array = function() {
+  const a = this.trim().replace(/[\n ]+/g, ' ').split(' ')
+  // .forEach((s, i) => {
+  //   a[i] = parseFloat(s)
+  // });
+
+  return new Float32Array(a);
+};

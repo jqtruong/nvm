@@ -7,25 +7,38 @@ const Canvas = (() => {
       canvas.height = window.innerHeight;
       Body.appendChild(canvas);
 
-      this.gl = canvas.getContext('webgl');
       this.width = canvas.width;
       this.height = canvas.height;
+
+      this.gl = canvas.getContext('webgl');
 
       if (!this.gl) {
         reject('Unable to initialize WebGL; check browser compatibility.');
       }
 
-      resolve();
+      resolve(this.gl);
     });
   }
 
   /////////////////////////////////////////
 
   return {
-    gl: null,
+    gl: null,                   // @TODO: remove in favor of Gl
     width: 0,
     height: 0,
     load: () => loadPromise.call(Canvas)
+  };
+})();
+
+
+const Gl = (() => {
+  const gl = null;
+
+  return {
+    load: (glFromCanvas) => {
+      gl = glFromCanvas;
+      return true;
+    }
   };
 })();
 
@@ -35,18 +48,15 @@ const Programs = (() => {
 
   const programs = {
     test: (() => {
-      const positions = [
-        0.5,  1,
-        -0.5,  1,
-        0.5, -1,
-        -0.5, -1
-      ];
-      const colors = [
-        1.0,  1.0,  1.0,  1.0,  // white
-        1.0,  0.0,  0.0,  1.0,  // red
-        0.0,  1.0,  0.0,  1.0,  // green
-        0.0,  0.0,  1.0,  1.0,  // blue
-      ];
+      const positions = ` 0.5  1
+                         -0.5  1
+                          0.5 -1
+                         -0.5 -1`.toFloat32Array();
+
+      const colors = `1  1  1  1
+                      1  0  0  1
+                      0  1  0  1
+                      0  0  1  1`.toFloat32Array();
 
       let program,
           a_position,
@@ -83,20 +93,24 @@ const Programs = (() => {
           const stride = 0;
           const offset = 0;
           gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-          gl.vertexAttribPointer(
-            a_position,
-            numComponents,
-            type,
-            normalize,
-            stride,
-            offset);
+          gl.vertexAttribPointer(a_position,
+                                 numComponents,
+                                 type,
+                                 normalize,
+                                 stride,
+                                 offset);
           gl.enableVertexAttribArray(a_position);
 
           gl.useProgram(program);
+          gl.uniformMatrix4fv(u_model_matrix,
+                              false,
+                              `1  0  0  0
+                               0  1  0  0
+                               0  0 -6  0
+                               0  0  0  1`.toFloat32Array());
           gl.uniformMatrix4fv(u_projection_matrix,
                               false,
                               Matrix.projection);
-
           // @TODO draw here
         }
       };
@@ -169,10 +183,10 @@ const GlProgram = (() => {
       });
   }
 
-  function _createBuffer(data) {
+  function _createBuffer(/* Float32Array */ data) {
     let buffer = Canvas.gl.createBuffer();
     Canvas.gl.bindBuffer(Canvas.gl.ARRAY_BUFFER, buffer);
-    Canvas.gl.bufferData(Canvas.gl.ARRAY_BUFFER, new Float32Array(data),
+    Canvas.gl.bufferData(Canvas.gl.ARRAY_BUFFER, data,
                          Canvas.gl.STATIC_DRAW);
 
     return buffer;
