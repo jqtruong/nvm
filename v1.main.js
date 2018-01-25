@@ -32,13 +32,32 @@ const Canvas = (() => {
 
 
 const Gl = (() => {
-  const gl = null;
+  let gl = null;
 
   return {
-    load: (glFromCanvas) => {
+    load: function(glFromCanvas) {
       gl = glFromCanvas;
+      this.getAttrib = gl.getAttribLocation;
+      this.getUniform = gl.getUniformLocation;
       return true;
-    }
+    },
+    clear: () => {
+      gl.viewport(0, 0, Canvas.width, Canvas.height);
+      gl.clearColor(0.0, 0.0, 0.0, 1.0); // Clear to black, fully opaque
+      gl.clearDepth(1.0);                // Clear everything
+      gl.enable(gl.DEPTH_TEST);          // Enable depth testing
+      gl.depthFunc(gl.LEQUAL);           // Near things obscure
+      gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    },
+    createBuffer: (/* Float32Array */ data) => {
+      let buffer = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+      gl.bufferData(gl.ARRAY_BUFFER, data,gl.STATIC_DRAW);
+
+      return buffer;
+    },
+    getAttrib: null,
+    getUniform: null
   };
 })();
 
@@ -68,19 +87,17 @@ const Programs = (() => {
           colorBuffer;
 
       const finishInit = (glProgram) => {
-        const gl = Canvas.gl;
 
         program = glProgram;
-        a_position = gl.getAttribLocation(program, 'a_position');
-        a_color = gl.getAttribLocation(program, 'a_color');
+        a_position = Gl.getAttrib(program, 'a_position');
+        a_color = Gl.getAttrib(program, 'a_color');
 
-        u_model_matrix = gl.getUniformLocation(program, 'u_model_matrix');
-        u_view_matrix = gl.getUniformLocation(program, 'u_view_matrix');
-        u_projection_matrix = gl.getUniformLocation(program,
-                                                   'u_projection_matrix');
+        u_model_matrix = Gl.getUniform(program, 'u_model_matrix');
+        u_view_matrix = Gl.getUniform(program, 'u_view_matrix');
+        u_projection_matrix = Gl.getUniform(program, 'u_projection_matrix');
 
-        positionBuffer = GlProgram.createBuffer(positions);
-        colorBuffer = GlProgram.createBuffer(colors);
+        positionBuffer = Gl.createBuffer(positions);
+        colorBuffer = Gl.createBuffer(colors);
       };
 
       return {
@@ -184,37 +201,16 @@ const GlProgram = (() => {
       });
   }
 
-  function _createBuffer(/* Float32Array */ data) {
-    let buffer = Canvas.gl.createBuffer();
-    Canvas.gl.bindBuffer(Canvas.gl.ARRAY_BUFFER, buffer);
-    Canvas.gl.bufferData(Canvas.gl.ARRAY_BUFFER, data,
-                         Canvas.gl.STATIC_DRAW);
-
-    return buffer;
-  }
-
   return {
-    setup: _setup,
-    createBuffer: _createBuffer
+    setup: _setup
   };
 })();
 
 
 const Frame = (() => {
 
-  function readyGl() {
-    const gl = Canvas.gl;
-    // Clear
-    gl.viewport(0, 0, Canvas.width, Canvas.height);
-    gl.clearColor(0.0, 0.0, 0.0, 1.0); // Clear to black, fully opaque
-    gl.clearDepth(1.0);                // Clear everything
-    gl.enable(gl.DEPTH_TEST);          // Enable depth testing
-    gl.depthFunc(gl.LEQUAL);           // Near things obscure
-    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-  }
-
   function render() {
-    readyGl();
+    Gl.clear();
     Programs.prep();
   }
 
@@ -232,6 +228,7 @@ const V1 = (() => {
 
   Game.addLoad('Canvas and Programs', function() {
     return Canvas.load()
+      .then(Gl.load)
       .then(Programs.load)
       .then(Matrix.load)
   });
