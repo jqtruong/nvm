@@ -10,20 +10,19 @@ const Canvas = (() => {
       this.width = canvas.width;
       this.height = canvas.height;
 
-      this.gl = canvas.getContext('webgl');
+      const gl = canvas.getContext('webgl');
 
-      if (!this.gl) {
+      if (!gl) {
         reject('Unable to initialize WebGL; check browser compatibility.');
       }
 
-      resolve(this.gl);
+      resolve(gl);
     });
   }
 
   /////////////////////////////////////////
 
   return {
-    gl: null,                   // @TODO: remove in favor of Gl
     width: 0,
     height: 0,
     load: () => loadPromise.call(Canvas)
@@ -34,11 +33,33 @@ const Canvas = (() => {
 const Gl = (() => {
   let gl = null;
 
+  const defaults = {
+    vertexPointer: {
+      numComponents: 2,
+      type: gl.FLOAT,
+      normalize: false,
+      stride: 0,
+      offset: 0,
+    }
+  }
+
+  const drawModes = [
+    'POINTS',             // Draws a single dot.
+    'LINE_STRIP',         // Draws a straight line to the next vertex.
+    'LINE_LOOP', // Draws a straight line to the next vertex, and
+                 // connects the last vertex back to the first.
+    'LINES',     // Draws a line between a pair of vertices.
+    'TRIANGLE_STRIP',
+    'TRIANGLE_FAN',
+    'TRIANGLES'
+  ];
+
   return {
     load: function(glFromCanvas) {
       gl = glFromCanvas;
       this.getAttrib = gl.getAttribLocation;
       this.getUniform = gl.getUniformLocation;
+      this.useProgram = gl.useProgram;
       return true;
     },
     clear: () => {
@@ -57,7 +78,87 @@ const Gl = (() => {
       return buffer;
     },
     getAttrib: null,
-    getUniform: null
+    getUniform: null,
+    useProgram: null,
+
+    checkShader: (shader) => {
+      const status = gl.getShaderParameter(shader, gl.COMPILE_STATUS);
+      if (!status) {
+        e('Program error with shader:', gl.getShaderInfoLog(shader));
+        gl.deleteShader(shader);
+        return Helper.rejectPromise('a bad shader');
+      }
+
+      return shader;
+    },
+    compileShader: (type, url) => {
+      return fetch(url)
+        .then(response => {
+          if (!response.ok) {
+            let err = l(`Error loading ${url} shader with response: `,
+                        response);
+            return Helper.rejectPromise(url);
+          }
+
+          return response.text();
+        })
+        .then(source => {
+          const shader = gl.createShader(type);
+          gl.shaderSource(shader, source);
+          gl.compileShader(shader);
+          return Gl.checkShader(shader);
+        });
+    },
+    setupProgram: (vrt = 'default', frg = 'default') => {
+      const program = gl.createProgram(),
+            vrtFile = `${V}.${vrt}-vrt.c`, // e.g. v1.default-vrt.c
+            frgFile = `${V}.${frg}-frg.c`;
+
+      return compileShader(gl.VERTEX_SHADER, vrtFile)
+        .then(vrtShader => {
+          gl.attachShader(program, vrtShader);
+          return compileShader(gl.FRAGMENT_SHADER, frgFile);
+        })
+        .then(frgShader => {
+          gl.attachShader(program, frgShader);
+          gl.linkProgram(program);
+          const status = gl.getProgramParameter(program, gl.LINK_STATUS)
+          if (! status) {
+            var info = gl.getProgramInfoLog(program);
+            e('Could not link WebGL program' + (info ? `:\n\n${info}` : '.'));
+            return Helper.rejectPromise('bad program') ;
+          }
+
+          return program;
+        });
+    },
+
+    sendVertices: (opts, buffer, attr) => {
+      let { numComponents,
+            type,
+            normalize,
+            stride,
+            offset } = Object.assign({}, defaults.vertexPointer, opts);
+
+      gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+      gl.vertexAttribPointer(attr, numComponents, type, normalize, stride,
+                             offset);
+      gl.enableVertexAttribArray(attr);
+    },
+    setUniform: (type, loc, matrix, transpose = false) => {
+      const glFun = gl[`uniformMatrix${type}`];
+      if (glFun) {
+        glFun(loc, transpose, matrix);
+      } else {
+        e(`gl.uniformMatrix${type}() does not exist.`);
+      }
+    },
+    drawArrays: (mode, offset, count) => {
+      const glMode = gl[mode];
+      if (drawModes.includes(mode) && glMode)
+        gl.drawArrays(glMode, offset, count);
+      else e(`gl${mode} does not exist.`);
+    }
   };
 })();
 
@@ -101,35 +202,17 @@ const Programs = (() => {
       };
 
       return {
-        init: function() { return GlProgram.setup().then(finishInit) },
+        init: function() { return Gl.setupProgram().then(finishInit) },
         prep:  function() {
-          const gl = Canvas.gl;
-          const numComponents = 2;
-          const type = gl.FLOAT;
-          const normalize = false;
-          const stride = 0;
-          const offset = 0;
-          gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-          gl.vertexAttribPointer(a_position,
-                                 numComponents,
-                                 type,
-                                 normalize,
-                                 stride,
-                                 offset);
-          gl.enableVertexAttribArray(a_position);
-
-          gl.useProgram(program);
-          gl.uniformMatrix4fv(u_model_matrix,
-                              false,
-                              `1  0  0  0
-                               0  1  0  0
-                               0  0 -6  0
-                               0  0  0  1`.toFloat32Array());
-          gl.uniformMatrix4fv(u_projection_matrix,
-                              false,
-                              Matrix.projection);
-          // @TODO draw here
-          Canvas.gl.drawArrays(Canvas.gl.TRIANGLE_STRIP, 0, 4);
+          Gl.sendVertices(opts, positionBuffer, a_position);
+          Gl.useProgram(program);
+          Gl.setUniform('4fv', u_model_matrix,
+                        `1  0  0  0
+                         0  1  0  0
+                         0  0 -6  0
+                         0  0  0  1`.toFloat32Array());
+          Gl.setUniform('4fv', u_projection_matrix, Matrix.projection);
+          Gl.drawArrays('TRIANGLE_STRIP', 0, 4);
         }
       };
     })()
@@ -138,71 +221,6 @@ const Programs = (() => {
   return {
     load: programs.test.init,
     prep: programs.test.prep
-  };
-})();
-
-
-const GlProgram = (() => {
-
-  function checkShader(shader) {
-    const status = Canvas.gl.getShaderParameter(shader,
-                                                Canvas.gl.COMPILE_STATUS);
-    if (!status) {
-      e('Program error with shader:', Canvas.gl.getShaderInfoLog(shader));
-      Canvas.gl.deleteShader(shader);
-      return Helper.rejectPromise('a bad shader');
-    }
-
-    return shader;
-  }
-
-  function compileShader(type, url) {
-    return fetch(url)
-      .then(response => {
-        if (!response.ok) {
-          let err = 
-              l(`Error loading ${url} shader with response: `, response);
-          return Helper.rejectPromise(url);
-        }
-
-        return response.text();
-      })
-      .then(source => {
-        const shader = Canvas.gl.createShader(type);
-        Canvas.gl.shaderSource(shader, source);
-        Canvas.gl.compileShader(shader);
-
-        return checkShader(shader);
-      });
-  }
-
-  function _setup(vrt = 'default', frg = 'default') {
-    const gl = Canvas.gl,
-          program = gl.createProgram(),
-          vrtFile = `${V}.${vrt}-vrt.c`, // e.g. v1.default-vrt.c
-          frgFile = `${V}.${frg}-frg.c`;
-
-    return compileShader(gl.VERTEX_SHADER, vrtFile)
-      .then(vrtShader => {
-        gl.attachShader(program, vrtShader);
-        return compileShader(gl.FRAGMENT_SHADER, frgFile);
-      })
-      .then(frgShader => {
-        gl.attachShader(program, frgShader);
-        gl.linkProgram(program);
-        const status = gl.getProgramParameter(program, gl.LINK_STATUS)
-        if (! status) {
-          var info = gl.getProgramInfoLog(program);
-          e('Could not link WebGL program' + (info ? `:\n\n${info}` : '.'));
-          return Helper.rejectPromise('bad program') ;
-        }
-
-        return program;
-      });
-  }
-
-  return {
-    setup: _setup
   };
 })();
 
