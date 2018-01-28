@@ -26,8 +26,8 @@ window.onload = (e) => {
 
       Head.appendChild(link)
     }))
-    .then(() => Game.load())
-    .then(() => Game.start())
+    .then(Game.load)
+    .then(Game.start)
     .catch(err => l(`Game could not start due to ${err}.`))
 }
 
@@ -73,7 +73,10 @@ const Game = (() => {
             l(`${name} loaded`)
             return result;
           })
-          .catch(msg => l(`Error: loading ${name}: ${msg}.`))
+          .catch(msg => {
+            e(`Error: loading ${name}: ${msg}.`);
+            return Helper.rejectPromise('failure to load');
+          })
       });
     },
     load: () => Promise.all(_loads.map(l => l.promise())),

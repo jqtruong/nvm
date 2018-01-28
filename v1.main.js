@@ -34,33 +34,74 @@ const Gl = (() => {
   let gl = null;
 
   const defaults = {
+    // https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/vertexAttribPointer
     vertexPointer: {
       numComponents: 2,
-      type: gl.FLOAT,
+      type: 'FLOAT',
       normalize: false,
       stride: 0,
       offset: 0,
     }
   }
 
-  const drawModes = [
-    'POINTS',             // Draws a single dot.
-    'LINE_STRIP',         // Draws a straight line to the next vertex.
-    'LINE_LOOP', // Draws a straight line to the next vertex, and
-                 // connects the last vertex back to the first.
-    'LINES',     // Draws a line between a pair of vertices.
-    'TRIANGLE_STRIP',
-    'TRIANGLE_FAN',
-    'TRIANGLES'
-  ];
+  const CONSTANTS = {
+    DRAW_MODES: [
+      'POINTS',
+      'LINE_STRIP',
+      'LINE_LOOP',
+      'LINES',
+      'TRIANGLE_STRIP',
+      'TRIANGLE_FAN',
+      'TRIANGLES'
+    ],
+    TYPES: [
+      'BYTE',
+      'SHORT',
+      'UNSIGNED_BYTE',
+      'UNSIGNED_SHORT',
+      'FLOAT'
+    ]
+  };
+
+  function checkShader(shader) {
+    const status = gl.getShaderParameter(shader, gl.COMPILE_STATUS);
+    if (!status) {
+      e('Program error with shader:', gl.getShaderInfoLog(shader));
+      gl.deleteShader(shader);
+      return Helper.rejectPromise('a bad shader');
+    }
+    return shader;
+  }
+
+  function compileShader(type, url) {
+    return fetch(url)
+      .then(response => {
+        if (!response.ok) {
+          let err = l(`Error loading ${url} shader with response: `,
+                      response);
+          return Helper.rejectPromise(url);
+        }
+        return response.text();
+      })
+      .then(source => {
+        const shader = gl.createShader(type);
+        gl.shaderSource(shader, source);
+        gl.compileShader(shader);
+        return checkShader(shader);
+      });
+  }
 
   return {
     load: function(glFromCanvas) {
       gl = glFromCanvas;
-      this.getAttrib = gl.getAttribLocation;
-      this.getUniform = gl.getUniformLocation;
-      this.useProgram = gl.useProgram;
-      return true;
+      this.getAttrib  = (p, n) => gl.getAttribLocation(p, n);
+      this.getUniform = (p, n) => gl.getUniformLocation(p, n);
+      this.useProgram = (p) => gl.useProgram(p);
+      if (!(this.useProgram ||
+            this.getUniform ||
+            this.getAttrib)) {
+        return Helper.rejectPromise('Gl');
+      }
     },
     clear: () => {
       gl.viewport(0, 0, Canvas.width, Canvas.height);
@@ -74,41 +115,12 @@ const Gl = (() => {
       let buffer = gl.createBuffer();
       gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
       gl.bufferData(gl.ARRAY_BUFFER, data,gl.STATIC_DRAW);
-
       return buffer;
     },
-    getAttrib: null,
+    getAttrib:  null,
     getUniform: null,
     useProgram: null,
 
-    checkShader: (shader) => {
-      const status = gl.getShaderParameter(shader, gl.COMPILE_STATUS);
-      if (!status) {
-        e('Program error with shader:', gl.getShaderInfoLog(shader));
-        gl.deleteShader(shader);
-        return Helper.rejectPromise('a bad shader');
-      }
-
-      return shader;
-    },
-    compileShader: (type, url) => {
-      return fetch(url)
-        .then(response => {
-          if (!response.ok) {
-            let err = l(`Error loading ${url} shader with response: `,
-                        response);
-            return Helper.rejectPromise(url);
-          }
-
-          return response.text();
-        })
-        .then(source => {
-          const shader = gl.createShader(type);
-          gl.shaderSource(shader, source);
-          gl.compileShader(shader);
-          return Gl.checkShader(shader);
-        });
-    },
     setupProgram: (vrt = 'default', frg = 'default') => {
       const program = gl.createProgram(),
             vrtFile = `${V}.${vrt}-vrt.c`, // e.g. v1.default-vrt.c
@@ -128,22 +140,26 @@ const Gl = (() => {
             e('Could not link WebGL program' + (info ? `:\n\n${info}` : '.'));
             return Helper.rejectPromise('bad program') ;
           }
-
           return program;
         });
     },
 
     sendVertices: (opts, buffer, attr) => {
       let { numComponents,
-            type,
+            type = 'FLOAT',
             normalize,
             stride,
             offset } = Object.assign({}, defaults.vertexPointer, opts);
 
-      gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
-      gl.vertexAttribPointer(attr, numComponents, type, normalize, stride,
-                             offset);
-      gl.enableVertexAttribArray(attr);
+      const glType = gl[type]
+      if (CONSTANTS.TYPES.includes(type) && glType) {
+        gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+        gl.vertexAttribPointer(attr, numComponents, type, normalize, stride,
+                               offset);
+        gl.enableVertexAttribArray(attr);
+      } else {
+        e(`gl.${type} does not exist.`);
+      }        
     },
     setUniform: (type, loc, matrix, transpose = false) => {
       const glFun = gl[`uniformMatrix${type}`];
@@ -155,15 +171,14 @@ const Gl = (() => {
     },
     drawArrays: (mode, offset, count) => {
       const glMode = gl[mode];
-      if (drawModes.includes(mode) && glMode)
+      if (CONSTANTS.DRAW_MODES.includes(mode) && glMode)
         gl.drawArrays(glMode, offset, count);
-      else e(`gl${mode} does not exist.`);
+      else e(`gl.${mode} does not exist.`);
     }
   };
 })();
 
 
-// @NOTE: Dependent on the Canvas being loaded first!
 const Programs = (() => {
 
   const programs = {
@@ -188,8 +203,8 @@ const Programs = (() => {
           colorBuffer;
 
       const finishInit = (glProgram) => {
-
         program = glProgram;
+
         a_position = Gl.getAttrib(program, 'a_position');
         a_color = Gl.getAttrib(program, 'a_color');
 
@@ -203,8 +218,8 @@ const Programs = (() => {
 
       return {
         init: function() { return Gl.setupProgram().then(finishInit) },
-        prep:  function() {
-          Gl.sendVertices(opts, positionBuffer, a_position);
+        prep: function() {
+          Gl.sendVertices({}, positionBuffer, a_position);
           Gl.useProgram(program);
           Gl.setUniform('4fv', u_model_matrix,
                         `1  0  0  0
@@ -246,7 +261,7 @@ const V1 = (() => {
 
   Game.addLoad('Canvas and Programs', function() {
     return Canvas.load()
-      .then(Gl.load)
+      .then(Gl.load.bind(Gl))
       .then(Programs.load)
       .then(Matrix.load)
   });
