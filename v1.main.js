@@ -94,9 +94,12 @@ const Gl = (() => {
   return {
     load: function(glFromCanvas) {
       gl = glFromCanvas;
-      this.getAttrib  = (p, n) => gl.getAttribLocation(p, n);
-      this.getUniform = (p, n) => gl.getUniformLocation(p, n);
-      this.useProgram = (p) => gl.useProgram(p);
+      // this.getAttrib  = (p, n) => gl.getAttribLocation(p, n);
+      // this.getUniform = (p, n) => gl.getUniformLocation(p, n);
+      // this.useProgram = (p) => gl.useProgram(p);
+      this.getAttrib  = gl.getAttribLocation.bind(gl);
+      this.getUniform = gl.getUniformLocation.bind(gl);
+      this.useProgram = gl.useProgram.bind(gl);
       if (!(this.useProgram ||
             this.getUniform ||
             this.getAttrib)) {
@@ -154,15 +157,14 @@ const Gl = (() => {
       const glType = gl[type]
       if (CONSTANTS.TYPES.includes(type) && glType) {
         gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
-        gl.vertexAttribPointer(attr, numComponents, type, normalize, stride,
-                               offset);
+        gl.vertexAttribPointer(attr, numComponents, glType, normalize, stride, offset);
         gl.enableVertexAttribArray(attr);
       } else {
         e(`gl.${type} does not exist.`);
       }        
     },
     setUniform: (type, loc, matrix, transpose = false) => {
-      const glFun = gl[`uniformMatrix${type}`];
+      const glFun = gl[`uniformMatrix${type}`].bind(gl);
       if (glFun) {
         glFun(loc, transpose, matrix);
       } else {
@@ -171,9 +173,11 @@ const Gl = (() => {
     },
     drawArrays: (mode, offset, count) => {
       const glMode = gl[mode];
-      if (CONSTANTS.DRAW_MODES.includes(mode) && glMode)
+      if (CONSTANTS.DRAW_MODES.includes(mode) && glMode) {
         gl.drawArrays(glMode, offset, count);
-      else e(`gl.${mode} does not exist.`);
+      } else {
+        e(`gl.${mode} does not exist.`);
+      }
     }
   };
 })();
