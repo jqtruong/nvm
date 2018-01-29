@@ -222,15 +222,13 @@ const Programs = (() => {
 
       return {
         init: function() { return Gl.setupProgram().then(finishInit) },
-        prep: function(frame) {
-          l(Game.msPassed);
+        prep: function() {
           Gl.sendVertices({}, positionBuffer, a_position);
           Gl.useProgram(program);
           Gl.setUniform('4fv', u_model_matrix,
-                        `1  0  0  0
-                         0  1  0  0
-                         0  0 -6  0
-                         0  0  0  1`.toFloat32Array());
+                        Matrix.scale(Matrix.translate(Matrix.identity(),
+                                                      0, 0, -6),
+                                     2, 1, 1));
           Gl.setUniform('4fv', u_projection_matrix, Matrix.projection);
           Gl.drawArrays('TRIANGLE_STRIP', 0, 4);
         }
@@ -262,13 +260,13 @@ const Frame = (() => {
 
 
 const V1 = (() => {
-  l('Game v1...')
+  l('Game v1...');
 
   Game.addLoad('Canvas and Programs', function() {
     return Canvas.load()
       .then(Gl.load.bind(Gl))
       .then(Programs.load)
-      .then(Matrix.load)
+      .then(Matrix.load.bind(Matrix))
   });
 
   Game.setLoop(Frame.next);
