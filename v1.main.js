@@ -222,7 +222,8 @@ const Programs = (() => {
 
       return {
         init: function() { return Gl.setupProgram().then(finishInit) },
-        prep: function() {
+        prep: function(frame) {
+          l(Game.msPassed);
           Gl.sendVertices({}, positionBuffer, a_position);
           Gl.useProgram(program);
           Gl.setUniform('4fv', u_model_matrix,

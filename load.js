@@ -55,7 +55,7 @@ var Helper = (function() {
 const Game = (() => {
   let _id = 0,                  // request frame id
       _loads = [],
-      _looper = () => l('you spin me right round'),
+      _looper = () => l('you should be spinning me right round...'),
 
       _msPassed = 0,
       _lastMs   = 0,
@@ -81,14 +81,15 @@ const Game = (() => {
     },
     load: () => Promise.all(_loads.map(l => l.promise())),
 
+    msPassed: 0,
     setLoop: (f) => _looper = f,
-    loop: (ms) => {
-      _msPassed = ms - _lastMs
+    loop: function(ms) {
+      this.msPassed = ms - _lastMs
       _lastMs = ms
       _id = window.requestAnimationFrame(_looper)
     },
 
-    start: () => Game.loop(),
+    start: () => Game.loop.call(Game, 0),
     stop: () => {
       window.cancelAnimationFrame(_id)
       return _id
