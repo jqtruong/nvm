@@ -226,9 +226,9 @@ const Programs = (() => {
           Gl.sendVertices({}, positionBuffer, a_position);
           Gl.useProgram(program);
           Gl.setUniform('4fv', u_model_matrix,
-                        Matrix.scale(Matrix.translate(Matrix.identity(),
-                                                      0, 0, -6),
-                                     2, 1, 1));
+                        Matrix.translate(Matrix.scale(Matrix.identity(),
+                                                      2, 1, 1),
+                                         0, 0, -6));
           Gl.setUniform('4fv', u_projection_matrix, Matrix.projection);
           Gl.drawArrays('TRIANGLE_STRIP', 0, 4);
         }
