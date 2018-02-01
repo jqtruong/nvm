@@ -65,6 +65,9 @@
       textures to texture units.
     - call =gl.drawArrays= or =gl.drawElements=
 
+*** Perspective/Projection Matrix
+    - fov :: 45° field of view
+    - f :: inverse tangent of 22.5°
 * Refs
   - http://nullprogram.com/sphere-js/
   - [[http://learningwebgl.com/blog/?p=859][learningwebgl: blending]]

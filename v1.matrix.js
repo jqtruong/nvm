@@ -23,7 +23,7 @@ const Matrix = (() => {
           nf     = 1.0/(zNear - zFar),
           zAll   = zNear*zFar*nf;
 
-    l(Canvas.width, Canvas.height, fov, f/aspect, f, zSum*nf, 2*zAll);
+    l(Canvas.width, Canvas.height, fov, f/aspect, f, nf, zSum*nf, 2*zAll);
     
     return `${f/aspect}    0          0  0
                       0 ${f}          0  0
