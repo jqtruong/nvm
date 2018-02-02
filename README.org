@@ -65,12 +65,14 @@
       textures to texture units.
     - call =gl.drawArrays= or =gl.drawElements=
 
-*** Perspective/Projection Matrix
+*** Orthographic projection matrix
+*** Perspective projection matrix
     - fov :: 45° field of view
     - f :: inverse tangent of 22.5°
 * Refs
   - http://nullprogram.com/sphere-js/
   - [[http://learningwebgl.com/blog/?p=859][learningwebgl: blending]]
+  - [[https://www.scratchapixel.com/lessons/3d-basic-rendering/perspective-and-orthographic-projection-matrix/orthographic-projection-matrix][ortho projection explaination]]
 
 ** Webserver
    Start a webserver to serve the shader files, just for

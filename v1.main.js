@@ -187,10 +187,10 @@ const Programs = (() => {
 
   const programs = {
     test: (() => {
-      const positions = ` 1.2071068  0.4581719
-                         -1.2071068  0.4581719
-                          1.2071068 -0.4581719
-                         -1.2071068 -0.4581719`.toFloat32Array();
+      const positions = ` .5  1
+                         -.5  1
+                          .5 -1
+                         -.5 -1`.toFloat32Array();
 
       const colors = `1  1  1  1
                       1  0  0  1
@@ -225,9 +225,7 @@ const Programs = (() => {
         prep: function() {
           Gl.sendVertices({}, positionBuffer, a_position);
           Gl.useProgram(program);
-          Gl.setUniform('4fv', u_model_matrix,
-                        Matrix.translate(Matrix.identity(),
-                                         0, 0, -2.106));
+          Gl.setUniform('4fv', u_model_matrix, Matrix.identity());
           Gl.setUniform('4fv', u_projection_matrix, Matrix.projection);
           Gl.drawArrays('TRIANGLE_STRIP', 0, 4);
         }

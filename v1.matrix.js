@@ -31,6 +31,19 @@ const Matrix = (() => {
                       0    0  ${2*zAll}  0`.toFloat32Array();
   };
 
+  function getOrtho() {
+    const n = .1,
+          f = 100,
+          xs = 2/Canvas.width,
+          ys = -2/Canvas.height,
+          zs = 2/(f - n);
+
+    return `${xs}     0     0 0
+                0 ${ys}     0 0
+                0     0 ${zs} 0
+               -1    -1     0 1`.toFloat32Array();
+  }
+
   function vectorize(x, y, z) {
     x = parseFloat(x) || 0.0;
     y = parseFloat(y) || 0.0;
@@ -84,7 +97,7 @@ const Matrix = (() => {
     scale: _scale,
     translate: _translate,
     load: function() {
-      this.projection = getPerspective();
+      this.projection = getOrtho();
     }
   };
 })();
