@@ -33,10 +33,10 @@ const Matrix = (() => {
 
   function getOrtho() {
     const n = .1,
-          f = 400,
+          f = 100,              
           xs =  2/Canvas.width,
           ys = -2/Canvas.height,
-          zs =  2/(f - n);
+          zs =  2/(f - n);      // doesn't seem to matter for ortho
 
     return `${xs}     0     0     0
                 0 ${ys}     0     0
@@ -64,38 +64,44 @@ const Matrix = (() => {
     }
   }
 
-  // Transformations: https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/Matrix_math_for_the_web
-  function _translate(matrix, x, y, z) {
-    // const v = vectorize(x, y, z);
-    x = parseFloat(x) || 0.0;
-    y = parseFloat(y) || 0.0;
-    z = parseFloat(z) || 0.0;
-
-    matrix[COORDS.x3] = x;
-    matrix[COORDS.y3] = y;
-    matrix[COORDS.z3] = z;
-
-    return matrix;
+  function parseXYZ(x, y, z, d = 0.0 /* default */) {
+    return {
+      x: parseFloat(x) || d,
+      y: parseFloat(y) || d,
+      z: parseFloat(z) || d
+    };
   }
 
-  function _scale(matrix, x, y, z) {
-    x = parseFloat(x) || 0.0;
-    y = parseFloat(y) || 0.0;
-    z = parseFloat(z) || 0.0;
+  // Transformations: https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/Matrix_math_for_the_web
+  function _translate(x0, y0, z0) {
+    let { x, y, z } = parseXYZ(x0, y0, z0);
 
-    matrix[COORDS.x0] *= x;
-    matrix[COORDS.y1] *= y;
-    matrix[COORDS.z2] *= z;
+    this.matrix[COORDS.x3] = x;
+    this.matrix[COORDS.y3] = y;
+    this.matrix[COORDS.z3] = z;
 
-    return matrix
+    return this;
+  }
+
+  function _scale(x0, y0, z0) {
+    let { x, y, z } = parseXYZ(x0, y0, z0, 1.0);
+
+    this.matrix[COORDS.x0] *= x;
+    this.matrix[COORDS.y1] *= y;
+    this.matrix[COORDS.z2] *= z;
+
+    return this;
   }
 
   return {
-    identity: () => ID.slice(),
+    new: function() {
+      return {
+        matrix: ID.slice(),
+        scale: _scale,
+        translate: _translate
+      };
+    },
     projection: [],
-    multiply: _multiply,
-    scale: _scale,
-    translate: _translate,
     load: function() {
       this.projection = getOrtho();
     }

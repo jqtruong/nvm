@@ -187,15 +187,11 @@ const Programs = (() => {
 
   const programs = {
     test: (() => {
-      // const positions = ` .5  1
-      //                    -.5  1
-      //                     .5 -1
-      //                    -.5 -1`.toFloat32Array();
-
-      const positions = ` 0   0
-                         50   0
-                          0 100
-                         50 100`.toFloat32Array();
+      const w = 50, h = 100,
+            positions = `   0    0
+                         ${w}    0
+                            0 ${h}
+                         ${w} ${h}`.toFloat32Array();
 
       const colors = `1  1  1  1
                       1  0  0  1
@@ -205,7 +201,7 @@ const Programs = (() => {
       let program,
           a_position,
           a_color,
-          u_model_matrix,
+          u_model_matrix, model,
           u_view_matrix,
           u_projection_matrix,
           positionBuffer,
@@ -226,11 +222,14 @@ const Programs = (() => {
       };
 
       return {
-        init: function() { return Gl.setupProgram().then(finishInit) },
+        init: function() {
+          model = Matrix.new().translate(100, 10).scale(2, 2);
+          return Gl.setupProgram().then(finishInit);
+        },
         prep: function() {
           Gl.sendVertices({}, positionBuffer, a_position);
           Gl.useProgram(program);
-          Gl.setUniform('4fv', u_model_matrix, Matrix.identity());
+          Gl.setUniform('4fv', u_model_matrix, model.matrix);
           Gl.setUniform('4fv', u_projection_matrix, Matrix.projection);
           Gl.drawArrays('TRIANGLE_STRIP', 0, 4);
         }

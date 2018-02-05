@@ -11,6 +11,13 @@
    trying to get ortho to show. i think that's what i need:
    3d on a 2d plane and space.
 
+   finally got it to work!
+   1. doesn't seem to matter what z-scale is as long as it's
+      between -1 and 1, but maybe it's needed for objects in
+      front and behind other objects.
+   2. vertices aren't normalized, since they are done in the
+      projection.
+
 ** [2018-01-25 Thu]
    .o0(i really need to remember to write my journey through
    this project down each day...)
