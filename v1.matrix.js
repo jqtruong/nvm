@@ -33,15 +33,15 @@ const Matrix = (() => {
 
   function getOrtho() {
     const n = .1,
-          f = 100,
-          xs = 2/Canvas.width,
+          f = 400,
+          xs =  2/Canvas.width,
           ys = -2/Canvas.height,
-          zs = 2/(f - n);
+          zs =  2/(f - n);
 
-    return `${xs}     0     0 0
-                0 ${ys}     0 0
-                0     0 ${zs} 0
-               -1    -1     0 1`.toFloat32Array();
+    return `${xs}     0     0     0
+                0 ${ys}     0     0
+                0     0 ${zs}     0
+               -1     1     0     1`.toFloat32Array();
   }
 
   function vectorize(x, y, z) {

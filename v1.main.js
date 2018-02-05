@@ -187,10 +187,15 @@ const Programs = (() => {
 
   const programs = {
     test: (() => {
-      const positions = ` .5  1
-                         -.5  1
-                          .5 -1
-                         -.5 -1`.toFloat32Array();
+      // const positions = ` .5  1
+      //                    -.5  1
+      //                     .5 -1
+      //                    -.5 -1`.toFloat32Array();
+
+      const positions = ` 0   0
+                         50   0
+                          0 100
+                         50 100`.toFloat32Array();
 
       const colors = `1  1  1  1
                       1  0  0  1
