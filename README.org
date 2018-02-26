@@ -7,6 +7,11 @@
 
 * WebGL
 
+** [2018-02-09 Fri]
+   based on this [[https://computergraphics.stackexchange.com/questions/1608/how-to-combine-rotation-in-2-axis-into-one-matrix][answer]], i can rotate on multiple axis by
+   multiplying the transformed matrices together:
+   : RotXMat * RotYMat * RotZMat
+
 ** [2018-02-04 Sun]
    trying to get ortho to show. i think that's what i need:
    3d on a 2d plane and space.

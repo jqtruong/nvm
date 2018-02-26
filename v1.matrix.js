@@ -73,13 +73,34 @@ const Matrix = (() => {
   }
 
   // Transformations: https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/Matrix_math_for_the_web
-  function _translate(x0, y0, z0) {
-    let { x, y, z } = parseXYZ(x0, y0, z0);
+  function _rotate(x0, y0, z0) {
+    let { x, y, z } = parseXYZ(x0, y0, z0, null);
 
-    this.matrix[COORDS.x3] = x;
-    this.matrix[COORDS.y3] = y;
-    this.matrix[COORDS.z3] = z;
+    function X(a) {
+      this.matrix[COORDS.y1] *= Math.cos(a);
+      this.matrix[COORDS.z1] *= Math.sin(a)*-1;
+      this.matrix[COORDS.y2] *= Math.sin(a);
+      this.matrix[COORDS.z2] *= Math.cos(a);
+    }
 
+    function Y(a) {
+      this.matrix[COORDS.x0] *= Math.cos(a);
+      this.matrix[COORDS.z0] *= Math.sin(a);
+      this.matrix[COORDS.x2] *= Math.sin(a)*-1;
+      this.matrix[COORDS.z2] *= Math.cos(a);
+    }
+
+    function Z(a) {
+      this.matrix[COORDS.x0] *= Math.cos(a);
+      this.matrix[COORDS.y0] *= Math.sin(a)*-1;
+      this.matrix[COORDS.x1] *= Math.sin(a);
+      this.matrix[COORDS.y1] *= Math.cos(a);
+    }
+
+    if (x) X.call(this, Math.PI*x/180);
+    if (y) Y.call(this, Math.PI*y/180);
+    if (z) Z.call(this, Math.PI*z/180);
+    l(this.matrix);
     return this;
   }
 
@@ -93,10 +114,21 @@ const Matrix = (() => {
     return this;
   }
 
+  function _translate(x0, y0, z0) {
+    let { x, y, z } = parseXYZ(x0, y0, z0);
+
+    this.matrix[COORDS.x3] = x;
+    this.matrix[COORDS.y3] = y;
+    this.matrix[COORDS.z3] = z;
+
+    return this;
+  }
+
   return {
     new: function() {
       return {
         matrix: ID.slice(),
+        rotate: _rotate,
         scale: _scale,
         translate: _translate
       };

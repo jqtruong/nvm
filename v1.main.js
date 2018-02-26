@@ -202,7 +202,6 @@ const Programs = (() => {
           a_position,
           a_color,
           u_model_matrix, model,
-          u_view_matrix,
           u_projection_matrix,
           positionBuffer,
           colorBuffer;
@@ -214,7 +213,6 @@ const Programs = (() => {
         a_color = Gl.getAttrib(program, 'a_color');
 
         u_model_matrix = Gl.getUniform(program, 'u_model_matrix');
-        u_view_matrix = Gl.getUniform(program, 'u_view_matrix');
         u_projection_matrix = Gl.getUniform(program, 'u_projection_matrix');
 
         positionBuffer = Gl.createBuffer(positions);
@@ -223,7 +221,10 @@ const Programs = (() => {
 
       return {
         init: function() {
-          model = Matrix.new().translate(100, 10).scale(2, 2);
+          model = Matrix.new()
+            .rotate(null, null, 30)
+            .translate(100, 10)
+            .scale(2, 2);
           return Gl.setupProgram().then(finishInit);
         },
         prep: function() {
