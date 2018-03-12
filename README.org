@@ -85,6 +85,18 @@
 *** Perspective projection matrix
     - fov :: 45° field of view
     - f :: inverse tangent of 22.5°
+
+* Matrix
+
+** Multiply
+   | 0 | 1 | 2 |   | a |   | (0*a) + (1*b) + (2*c) |
+   | 3 | 4 | 5 | x | b | = | (3*a) + (4*b) + (5*c) |
+   | 6 | 7 | 8 |   | c |   | (6*a) + (7*b) + (8*c) |
+
+*** Dimension rule
+    3x3 ⋅ 3x1 = 3x1
+    AxB ⋅ CxD = AxD as long as B == C
+   
 * Refs
   - http://nullprogram.com/sphere-js/
   - [[http://learningwebgl.com/blog/?p=859][learningwebgl: blending]]

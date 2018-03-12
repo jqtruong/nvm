@@ -116,10 +116,33 @@ var Events = (() => {
 
 
 String.prototype.toFloat32Array = function() {
-  const a = this.trim().replace(/[\n ]+/g, ' ').split(' ')
-  // .forEach((s, i) => {
-  //   a[i] = parseFloat(s)
-  // });
-
+  const a = this.trim().replace(/[\n ]+/g, ' ').split(' ');
   return new Float32Array(a);
+};
+
+
+let COORDS = {
+  'x0':  0, 'y0':  1, 'z0':  2, 'w0':  3,
+  'x1':  4, 'y1':  5, 'z1':  6, 'w1':  7,
+  'x2':  8, 'y2':  9, 'z2': 10, 'w2': 11,
+  'x3': 12, 'y3': 13, 'z3': 14, 'w3': 15,
+};
+
+const X = 'x',
+      Y = 'y',
+      Z = 'z',
+      W = 'w';
+
+Float32Array.prototype.row = function(r) {
+  return [ this[COORDS[`x${r}`]],
+           this[COORDS[`y${r}`]],
+           this[COORDS[`z${r}`]],
+           this[COORDS[`w${r}`]]  ];
+};
+
+Float32Array.prototype.col = function(c) {
+  return [ this[COORDS[`${c}0`]],
+           this[COORDS[`${c}1`]],
+           this[COORDS[`${c}2`]],
+           this[COORDS[`${c}3`]]  ];
 };

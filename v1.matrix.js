@@ -1,12 +1,5 @@
 const Matrix = (() => {
 
-  const COORDS = {
-    'x0':  0, 'y0':  1, 'z0':  2, 'w0':  3,
-    'x1':  4, 'y1':  5, 'z1':  6, 'w1':  7,
-    'x2':  8, 'y2':  9, 'z2': 10, 'w2': 11,
-    'x3': 12, 'y3': 13, 'z3': 14, 'w3': 15,
-  };
-
   const ID = `1 0 0 0
               0 1 0 0
               0 0 1 0
@@ -54,14 +47,43 @@ const Matrix = (() => {
             ${z}`.toFloat32Array();
   }
 
-  function _multiply(matrix, vector) {
-    let { x, y, z, w } = vector;
-    return {
-      x: x*matrix[COORDS.x0] + y*matrix[COORDS.y0] + z*matrix[COORDS.z0] + w*matrix[COORDS.w0],
-      y: x*matrix[COORDS.x1] + y*matrix[COORDS.y1] + z*matrix[COORDS.z1] + w*matrix[COORDS.w1],
-      z: x*matrix[COORDS.x2] + y*matrix[COORDS.y2] + z*matrix[COORDS.z2] + w*matrix[COORDS.w2],
-      w: x*matrix[COORDS.x3] + y*matrix[COORDS.y3] + z*matrix[COORDS.z3] + w*matrix[COORDS.w3]
-    }
+  // is this a matrix object or matrix array?
+  function _multiplyByMatrix(mat) {
+    var result = new Float32Array(16);
+
+    [ result[COORDS.x0],
+      result[COORDS.x1],
+      result[COORDS.x2],
+      result[COORDS.x3] ] = _multiplyByVector(this.matrix, mat.col(X));
+
+    [ result[COORDS.y0],
+      result[COORDS.y1],
+      result[COORDS.y2],
+      result[COORDS.y3] ] = _multiplyByVector(this.matrix, mat.col(Y));
+
+    [ result[COORDS.z0],
+      result[COORDS.z1],
+      result[COORDS.z2],
+      result[COORDS.z3] ] = _multiplyByVector(this.matrix, mat.col(Z));
+
+    [ result[COORDS.w0],
+      result[COORDS.w1],
+      result[COORDS.w2],
+      result[COORDS.w3] ] = _multiplyByVector(this.matrix, mat.col(W));
+
+    this.matrix = result;
+
+    return this;
+  }
+
+  // Return a 4x1 column from multiplying matrix w/ vector.
+  function _multiplyByVector(matrix, vector) {
+    return Array(4).fill()
+      .map((_, i) => {
+        return matrix.row(i)
+          .map((val, j) => val*vector[j])
+          .reduce((sum, cur) => sum + cur)
+      });
   }
 
   function parseXYZ(x, y, z, d = 0.0 /* default */) {
@@ -72,35 +94,26 @@ const Matrix = (() => {
     };
   }
 
-  // Transformations: https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/Matrix_math_for_the_web
-  function _rotate(x0, y0, z0) {
-    let { x, y, z } = parseXYZ(x0, y0, z0, null);
+  /* Transformations:
+  https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/Matrix_math_for_the_web
+  */
+  function _rotate(angle) {
+    var a = Math.PI*angle/180,
+        x0 = Math.cos(a),
+        x1 = Math.sin(a)*-1,
+        y0 = Math.sin(a),
+        y1 = Math.cos(a),
 
-    function X(a) {
-      this.matrix[COORDS.y1] *= Math.cos(a);
-      this.matrix[COORDS.z1] *= Math.sin(a)*-1;
-      this.matrix[COORDS.y2] *= Math.sin(a);
-      this.matrix[COORDS.z2] *= Math.cos(a);
-    }
+        zRotation = `${x0} ${y0}    0    0
+                     ${x1} ${y1}    0    0
+                         0     0    1    0
+                         0     0    0    1`
+        .toFloat32Array();
 
-    function Y(a) {
-      this.matrix[COORDS.x0] *= Math.cos(a);
-      this.matrix[COORDS.z0] *= Math.sin(a);
-      this.matrix[COORDS.x2] *= Math.sin(a)*-1;
-      this.matrix[COORDS.z2] *= Math.cos(a);
-    }
+    l('z rotation matrix', zRotation, x0, x1);
 
-    function Z(a) {
-      this.matrix[COORDS.x0] *= Math.cos(a);
-      this.matrix[COORDS.y0] *= Math.sin(a)*-1;
-      this.matrix[COORDS.x1] *= Math.sin(a);
-      this.matrix[COORDS.y1] *= Math.cos(a);
-    }
+    this.multiply(zRotation);
 
-    if (x) X.call(this, Math.PI*x/180);
-    if (y) Y.call(this, Math.PI*y/180);
-    if (z) Z.call(this, Math.PI*z/180);
-    l(this.matrix);
     return this;
   }
 
@@ -128,6 +141,7 @@ const Matrix = (() => {
     new: function() {
       return {
         matrix: ID.slice(),
+        multiply: _multiplyByMatrix,
         rotate: _rotate,
         scale: _scale,
         translate: _translate
