@@ -222,10 +222,9 @@ const Programs = (() => {
       return {
         init: function() {
           model = Matrix.new()
-            .rotate(30)
-            // .translate(100, 10)
+            .rotate(0, 0, 0)
+            .translate(10, 10)
           // .scale(2, 2);
-          l(model.matrix);
           return Gl.setupProgram().then(finishInit);
         },
         prep: function() {

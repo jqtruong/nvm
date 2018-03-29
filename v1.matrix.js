@@ -97,20 +97,37 @@ const Matrix = (() => {
   /* Transformations:
   https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/Matrix_math_for_the_web
   */
-  function _rotate(angle) {
-    var a = Math.PI*angle/180,
-        x0 = Math.cos(a),
-        x1 = Math.sin(a)*-1,
-        y0 = Math.sin(a),
-        y1 = Math.cos(a),
+  function _rotate(x0, y0, z0) {
+    let { x, y, z } = parseXYZ(x0, y0, z0, 0),
+        _mat = this;
+        
+    function Y(angle) {
+      let a = Math.PI*angle/180,
+          c = Math.cos(a),
+          s = Math.sin(a),
+          mat = ` ${c}   0   ${s}   0
+                     0   1      0   0
+                 ${-s}   0   ${c}   0    
+                     0   0      0   1`.toFloat32Array();
 
-        zRotation = `${x0} ${y0}    0    0
-                     ${x1} ${y1}    0    0
-                         0     0    1    0
-                         0     0    0    1`
-        .toFloat32Array();
+      _mat.multiply(mat);
+    }
 
-    this.multiply(zRotation);
+    function Z(angle) {
+      let a    = Math.PI*angle/180,
+          cos  = Math.cos(a),
+          _sin = Math.sin(a)*-1,
+          sin  = Math.sin(a),
+          mat  = `${cos} ${_sin}    0    0
+                  ${sin}  ${cos}    0    0
+                       0       0    1    0
+                       0       0    0    1`.toFloat32Array();
+
+      _mat.multiply(mat);
+    }
+
+    if (y) Y(y);
+    if (z) Z(z);
 
     return this;
   }
@@ -147,7 +164,7 @@ const Matrix = (() => {
     },
     projection: [],
     load: function() {
-      this.projection = getOrtho();
+      this.projection = getPerspective();
     }
   };
 })();
