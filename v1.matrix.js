@@ -110,8 +110,6 @@ const Matrix = (() => {
                          0     0    0    1`
         .toFloat32Array();
 
-    l('z rotation matrix', zRotation, x0, x1);
-
     this.multiply(zRotation);
 
     return this;
