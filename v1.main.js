@@ -117,7 +117,7 @@ const Gl = (() => {
     createBuffer: (/* Float32Array */ data) => {
       let buffer = gl.createBuffer();
       gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
-      gl.bufferData(gl.ARRAY_BUFFER, data,gl.STATIC_DRAW);
+      gl.bufferData(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW);
       return buffer;
     },
     getAttrib:  null,
@@ -156,9 +156,10 @@ const Gl = (() => {
 
       const glType = gl[type]
       if (CONSTANTS.TYPES.includes(type) && glType) {
-        gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
-        gl.vertexAttribPointer(attr, numComponents, glType, normalize, stride, offset);
         gl.enableVertexAttribArray(attr);
+        gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+        gl.vertexAttribPointer(attr, numComponents, glType, normalize,
+                               stride, offset);
       } else {
         e(`gl.${type} does not exist.`);
       }        
@@ -204,7 +205,8 @@ const Programs = (() => {
           u_model_matrix, model,
           u_projection_matrix,
           positionBuffer,
-          colorBuffer;
+          colorBuffer,
+          angle = 0;
 
       const finishInit = (glProgram) => {
         program = glProgram;
@@ -219,15 +221,21 @@ const Programs = (() => {
         colorBuffer = Gl.createBuffer(colors);
       };
 
+      const update = () => {
+        model.rotate(0, angle++, 0);
+      };
+
       return {
         init: function() {
           model = Matrix.new()
-            .rotate(0, 0, 0)
-            .translate(10, 10)
-          // .scale(2, 2);
+          // .rotate(22.5, 60, 0)
+            .translate(Canvas.width/2, Canvas.height/2)
+          // .scale(2, 2)
+          ;
           return Gl.setupProgram().then(finishInit);
         },
         prep: function() {
+          update();
           Gl.sendVertices({}, positionBuffer, a_position);
           Gl.useProgram(program);
           Gl.setUniform('4fv', u_model_matrix, model.matrix);

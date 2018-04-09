@@ -26,7 +26,7 @@ const Matrix = (() => {
 
   function getOrtho() {
     const n = .1,
-          f = 100,              
+          f = 400,
           xs =  2/Canvas.width,
           ys = -2/Canvas.height,
           zs =  2/(f - n);      // doesn't seem to matter for ortho
@@ -95,37 +95,49 @@ const Matrix = (() => {
   }
 
   /* Transformations:
-  https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/Matrix_math_for_the_web
-  */
+   * https://webglfundamentals.org/webgl/lessons/webgl-3d-orthographic.html  
+   */
   function _rotate(x0, y0, z0) {
     let { x, y, z } = parseXYZ(x0, y0, z0, 0),
         _mat = this;
         
+    function X(angle) {
+      let a = Math.PI*angle/180,
+          c = Math.cos(a),
+          s = Math.sin(a),
+          mat = `1     0    0  0
+                 0  ${c} ${s}  0
+                 0 ${-s} ${c}  0   
+                 0     0    0  1`.toFloat32Array();
+
+      _mat.multiply(mat);
+    }
+
     function Y(angle) {
       let a = Math.PI*angle/180,
           c = Math.cos(a),
           s = Math.sin(a),
-          mat = ` ${c}   0   ${s}   0
-                     0   1      0   0
-                 ${-s}   0   ${c}   0    
-                     0   0      0   1`.toFloat32Array();
+          mat = ` ${c}  0 ${s}  0
+                     0  1    0  0
+                 ${-s}  0 ${c}  0    
+                     0  0    0  1`.toFloat32Array();
 
       _mat.multiply(mat);
     }
 
     function Z(angle) {
-      let a    = Math.PI*angle/180,
-          cos  = Math.cos(a),
-          _sin = Math.sin(a)*-1,
-          sin  = Math.sin(a),
-          mat  = `${cos} ${_sin}    0    0
-                  ${sin}  ${cos}    0    0
-                       0       0    1    0
-                       0       0    0    1`.toFloat32Array();
+      let a = Math.PI*angle/180,
+          c = Math.cos(a),
+          s = Math.sin(a),
+          mat  = `${c} ${-s}  0  0
+                  ${s}  ${c}  0  0
+                     0     0  1  0
+                     0     0  0  1`.toFloat32Array();
 
       _mat.multiply(mat);
     }
 
+    if (x) X(x);
     if (y) Y(y);
     if (z) Z(z);
 
@@ -164,7 +176,7 @@ const Matrix = (() => {
     },
     projection: [],
     load: function() {
-      this.projection = getPerspective();
+      this.projection = getOrtho();
     }
   };
 })();
