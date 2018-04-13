@@ -7,6 +7,15 @@
 
 * WebGL
 
+** [2018-04-13 Fri]
+   wow, i have been working little by little but i really
+   suck at updating this log.
+
+   anyway, now i understand orthographic projection a bit
+   more; i need to rotate it around the x-axis a bit to make
+   everything look 3d. so now i can start adding those
+   windows!
+
 ** [2018-02-09 Fri]
    based on this [[https://computergraphics.stackexchange.com/questions/1608/how-to-combine-rotation-in-2-axis-into-one-matrix][answer]], i can rotate on multiple axis by
    multiplying the transformed matrices together:
