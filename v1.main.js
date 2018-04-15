@@ -13,7 +13,7 @@ const Canvas = (() => {
       const gl = canvas.getContext('webgl');
 
       if (!gl) {
-        reject('Unable to initialize WebGL; check browser compatibility.');
+        reject('Unable to initialize WebGL check browser compatibility.');
       }
 
       resolve(gl);
@@ -42,7 +42,7 @@ const Gl = (() => {
       stride: 0,
       offset: 0,
     }
-  }
+  };
 
   const CONSTANTS = {
     DRAW_MODES: [
@@ -68,8 +68,10 @@ const Gl = (() => {
     if (!status) {
       e('Program error with shader:', gl.getShaderInfoLog(shader));
       gl.deleteShader(shader);
-      return Helper.rejectPromise('a bad shader');
+
+      return Promise.reject('a bad shader');
     }
+
     return shader;
   }
 
@@ -79,14 +81,17 @@ const Gl = (() => {
         if (!response.ok) {
           let err = l(`Error loading ${url} shader with response: `,
                       response);
-          return Helper.rejectPromise(url);
+
+          return Promise.reject(url);
         }
+
         return response.text();
       })
       .then(source => {
         const shader = gl.createShader(type);
         gl.shaderSource(shader, source);
         gl.compileShader(shader);
+
         return checkShader(shader);
       });
   }
@@ -94,19 +99,16 @@ const Gl = (() => {
   return {
     load: function(glFromCanvas) {
       gl = glFromCanvas;
-      // this.getAttrib  = (p, n) => gl.getAttribLocation(p, n);
-      // this.getUniform = (p, n) => gl.getUniformLocation(p, n);
-      // this.useProgram = (p) => gl.useProgram(p);
       this.getAttrib  = gl.getAttribLocation.bind(gl);
       this.getUniform = gl.getUniformLocation.bind(gl);
       this.useProgram = gl.useProgram.bind(gl);
       if (!(this.useProgram ||
             this.getUniform ||
             this.getAttrib)) {
-        return Helper.rejectPromise('Gl');
+        return Promise.reject('Gl');
       }
     },
-    clear: () => {
+    clear: function() {
       gl.viewport(0, 0, Canvas.width, Canvas.height);
       gl.clearColor(0.0, 0.0, 0.0, 1.0); // Clear to black, fully opaque
       gl.clearDepth(1.0);                // Clear everything
@@ -114,7 +116,7 @@ const Gl = (() => {
       gl.depthFunc(gl.LEQUAL);           // Near things obscure
       gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     },
-    createBuffer: (/* Float32Array */ data) => {
+    createBuffer: function(/* Float32Array */ data) {
       let buffer = gl.createBuffer();
       gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
       gl.bufferData(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW);
@@ -124,7 +126,7 @@ const Gl = (() => {
     getUniform: null,
     useProgram: null,
 
-    setupProgram: (vrt = 'default', frg = 'default') => {
+    setupProgram: function (vrt = 'default', frg = 'default') {
       const program = gl.createProgram(),
             vrtFile = `${V}.${vrt}-vrt.c`, // e.g. v1.default-vrt.c
             frgFile = `${V}.${frg}-frg.c`;
@@ -135,26 +137,28 @@ const Gl = (() => {
           return compileShader(gl.FRAGMENT_SHADER, frgFile);
         })
         .then(frgShader => {
-          gl.attachShader(program, frgShader);
-          gl.linkProgram(program);
-          const status = gl.getProgramParameter(program, gl.LINK_STATUS)
-          if (! status) {
+          const status = (() => {
+            gl.attachShader(program, frgShader);
+            gl.linkProgram(program);
+            return gl.getProgramParameter(program, gl.LINK_STATUS);
+          })();
+          if (!status) {
             var info = gl.getProgramInfoLog(program);
             e('Could not link WebGL program' + (info ? `:\n\n${info}` : '.'));
-            return Helper.rejectPromise('bad program') ;
+            return Promise.reject('bad program');
           }
           return program;
-        });
+        })
     },
 
-    sendVertices: (opts, buffer, attr) => {
+    sendVertices: function (opts, buffer, attr) {
       let { numComponents,
             type = 'FLOAT',
             normalize,
             stride,
             offset } = Object.assign({}, defaults.vertexPointer, opts);
 
-      const glType = gl[type]
+      const glType = gl[type];
       if (CONSTANTS.TYPES.includes(type) && glType) {
         gl.enableVertexAttribArray(attr);
         gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
@@ -164,7 +168,7 @@ const Gl = (() => {
         e(`gl.${type} does not exist.`);
       }        
     },
-    setUniform: (type, loc, matrix, transpose = false) => {
+    setUniform: function(type, loc, matrix, transpose = false) {
       const glFun = gl[`uniformMatrix${type}`].bind(gl);
       if (glFun) {
         glFun(loc, transpose, matrix);
@@ -172,7 +176,7 @@ const Gl = (() => {
         e(`gl.uniformMatrix${type}() does not exist.`);
       }
     },
-    drawArrays: (mode, offset, count) => {
+    drawArrays: function(mode, offset, count) {
       const glMode = gl[mode];
       if (CONSTANTS.DRAW_MODES.includes(mode) && glMode) {
         gl.drawArrays(glMode, offset, count);
@@ -180,7 +184,7 @@ const Gl = (() => {
         e(`gl.${mode} does not exist.`);
       }
     }
-  };
+  }
 })();
 
 
@@ -188,11 +192,14 @@ const Programs = (() => {
 
   const programs = {
     test: (() => {
-      const w = 50, h = 100,
-            positions = `   0    0
-                         ${w}    0
-                            0 ${h}
-                         ${w} ${h}`.toFloat32Array();
+      let w = 50, h = 100, r = w/2, l = -r, t = 0, b = h;
+
+      const positions = `${l} ${t}
+                         ${r} ${t}
+                         ${l} ${b}
+                         ${l} ${b}
+                         ${r} ${t}
+                         ${r} ${b}`.toFloat32Array();
 
       const colors = `1  1  1  1
                       1  0  0  1
@@ -206,7 +213,8 @@ const Programs = (() => {
           u_projection_matrix,
           positionBuffer,
           colorBuffer,
-          angle = 0;
+          ms = 0,
+          angle = 1;
 
       const finishInit = (glProgram) => {
         program = glProgram;
@@ -222,16 +230,19 @@ const Programs = (() => {
       };
 
       const update = () => {
-        model.rotate(0, angle++, 0);
+        ms += Game.msPassed;
+        if (ms > 33) {
+          model
+            .rotate(0, angle)
+            .translate((Canvas.width - w)/2,
+                       Canvas.height/2);
+          ms = 0;
+        }
       };
 
       return {
         init: function() {
           model = Matrix.new()
-          // .rotate(22.5, 60, 0)
-            .translate(Canvas.width/2, Canvas.height/2)
-          // .scale(2, 2)
-          ;
           return Gl.setupProgram().then(finishInit);
         },
         prep: function() {
@@ -240,16 +251,16 @@ const Programs = (() => {
           Gl.useProgram(program);
           Gl.setUniform('4fv', u_model_matrix, model.matrix);
           Gl.setUniform('4fv', u_projection_matrix, Matrix.projection);
-          Gl.drawArrays('TRIANGLE_STRIP', 0, 4);
+          Gl.drawArrays('TRIANGLES', 0, 6);
         }
-      };
+      }
     })()
   };
 
   return {
     load: programs.test.init,
     prep: programs.test.prep
-  };
+  }
 })();
 
 
@@ -265,7 +276,7 @@ const Frame = (() => {
       Game.loop(ms);
       render();
     }
-  };
+  }
 })();
 
 
@@ -276,7 +287,7 @@ const V1 = (() => {
     return Canvas.load()
       .then(Gl.load.bind(Gl))
       .then(Programs.load)
-      .then(Matrix.load.bind(Matrix))
+      .then(Matrix.load.bind(Matrix));
   });
 
   Game.setLoop(Frame.next);

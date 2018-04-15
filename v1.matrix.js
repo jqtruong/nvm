@@ -22,7 +22,7 @@ const Matrix = (() => {
                       0 ${f}          0  0
                       0    0 ${zSum*nf} -1
                       0    0  ${2*zAll}  0`.toFloat32Array();
-  };
+  }
 
   function getOrtho() {
     const n = .1,
@@ -38,18 +38,29 @@ const Matrix = (() => {
   }
 
   function vectorize(x, y, z) {
-    x = parseFloat(x) || 0.0;
-    y = parseFloat(y) || 0.0;
-    z = parseFloat(z) || 0.0;
+    x = parseFloat(x) || 0;
+    y = parseFloat(y) || 0;
+    z = parseFloat(z) || 0;
 
     return `${x}
             ${y}
             ${z}`.toFloat32Array();
   }
 
+  function _new() {
+    return {
+      matrix: ID.slice(),
+      multiply: _multiplyByMatrix,
+      rotate: _rotate,
+      scale: _scale,
+      translate: _translate
+    };
+  }
+
   // is this a matrix object or matrix array?
   function _multiplyByMatrix(mat) {
-    var result = new Float32Array(16);
+    var result = new Float32Array(16); // needed ; so [ doesn't
+                                       // activate
 
     [ result[COORDS.x0],
       result[COORDS.x1],
@@ -82,11 +93,11 @@ const Matrix = (() => {
       .map((_, i) => {
         return matrix.row(i)
           .map((val, j) => val*vector[j])
-          .reduce((sum, cur) => sum + cur)
+          .reduce((sum, cur) => sum + cur);
       });
   }
 
-  function parseXYZ(x, y, z, d = 0.0 /* default */) {
+  function parseXYZ(x, y, z, d = 0 /* default */) {
     return {
       x: parseFloat(x) || d,
       y: parseFloat(y) || d,
@@ -100,7 +111,7 @@ const Matrix = (() => {
   function _rotate(x0, y0, z0) {
     let { x, y, z } = parseXYZ(x0, y0, z0, 0),
         _mat = this;
-        
+
     function X(angle) {
       let a = Math.PI*angle/180,
           c = Math.cos(a),
@@ -165,18 +176,11 @@ const Matrix = (() => {
   }
 
   return {
-    new: function() {
-      return {
-        matrix: ID.slice(),
-        multiply: _multiplyByMatrix,
-        rotate: _rotate,
-        scale: _scale,
-        translate: _translate
-      };
-    },
+    new: _new,
     projection: [],
     load: function() {
-      this.projection = getOrtho();
+      var ortho = _new().rotate(10).multiply(getOrtho());
+      this.projection = ortho.matrix;
     }
-  };
+  }
 })();

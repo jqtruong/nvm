@@ -1,40 +1,38 @@
 const Head = document.getElementsByTagName('head')[0],
       Body = document.body,
       l = console.log,
-      e = console.error
+      e = console.error;
 
 let N = 0,
-    V = ''
+    V = '';
 
 
 window.onload = (e) => {
-  console.log('main load')
-
-  N = new URLSearchParams(location.search).get('v') || 1
-  V = `v${N}`
+  N = new URLSearchParams(location.search).get('v') || 1;
+  V = `v${N}`;
 
   // Load JS and CSS
   Helper.loadScript('main')
     .then(() => Helper.loadScript('design'))
     .then(() => Helper.loadScript('matrix'))
     .then(() => new Promise((ok, argh) => {
-      var link = document.createElement('link')
-      link.rel = 'stylesheet'
-      link.type = 'text/css'
-      link.href = `${V}.css`
-      link.onload = () => ok(true)
+      var link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.type = 'text/css';
+      link.href = `${V}.css`;
+      link.onload = () => ok(true);
 
-      Head.appendChild(link)
+      Head.appendChild(link);
     }))
     .then(Game.load)
     .then(Game.start)
-    .catch(err => l(`Game could not start due to ${err}.`))
+    .catch(err => l(`Game could not start due to ${err}.`));
 }
 
 
 var Helper = (function() {
 
-  var d = document
+  var d = document;
 
   return {
     rejectPromise: (msg) => new Promise((res, rej) => rej(msg)),
@@ -42,11 +40,11 @@ var Helper = (function() {
     get1ByTag: (name) => d.getElementsByTagName(name)[0],
     getAllByTag: (name) => d.getElementsByTagName(name),
     loadScript: (name) => new Promise((ok, argh) => {
-      var script = document.createElement('script')
-      script.src = `${V}.${name}.js`
-      script.onload = () => ok(true)
+      var script = document.createElement('script');
+      script.src = `${V}.${name}.js`;
+      script.onload = () => ok(true);
 
-      Body.appendChild(script)
+      Body.appendChild(script);
     })
   }
 })()
@@ -70,29 +68,29 @@ const Game = (() => {
         name: name,
         promise: () => loader()
           .then(result => {
-            l(`${name} loaded`)
+            l(`${name} loaded`);
             return result;
           })
           .catch(msg => {
             e(`Error: loading ${name}: ${msg}.`);
-            return Helper.rejectPromise('failure to load');
+            return Promise.reject('failure to load');
           })
-      });
+      })
     },
     load: () => Promise.all(_loads.map(l => l.promise())),
 
     msPassed: 0,
     setLoop: (f) => _looper = f,
     loop: function(ms) {
-      this.msPassed = ms - _lastMs
-      _lastMs = ms
-      _id = window.requestAnimationFrame(_looper)
+      this.msPassed = ms - _lastMs;
+      _lastMs = ms;
+      _id = window.requestAnimationFrame(_looper);
     },
 
     start: () => Game.loop.call(Game, 0),
     stop: () => {
-      window.cancelAnimationFrame(_id)
-      return _id
+      window.cancelAnimationFrame(_id);
+      return _id;
     }
   }
 })()
@@ -104,11 +102,11 @@ var Events = (() => {
     switch (e.keyCode) {
 
     case 27:                      // esc
-      l(`stopped game at ${Game.stop()}`)
+      l(`stopped game at ${Game.stop()}`);
       break;
 
     default:
-      // l(e.keyCode)
+      l('Keycode:', e.keyCode);
     }
   }
 
@@ -118,7 +116,7 @@ var Events = (() => {
 String.prototype.toFloat32Array = function() {
   const a = this.trim().replace(/[\n ]+/g, ' ').split(' ');
   return new Float32Array(a);
-};
+}
 
 
 let COORDS = {
