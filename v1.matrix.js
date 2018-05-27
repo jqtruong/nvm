@@ -1,9 +1,11 @@
-const Matrix = (() => {
+const ID = `
+1 0 0 0
+0 1 0 0
+0 0 1 0
+0 0 0 1`.toFloat32Array();
 
-  const ID = `1 0 0 0
-              0 1 0 0
-              0 0 1 0
-              0 0 0 1`.toFloat32Array();
+
+const Matrix = (() => {
 
   function getPerspective() {
     // @TODO get some "perspective" on these
@@ -47,15 +49,15 @@ const Matrix = (() => {
             ${z}`.toFloat32Array();
   }
 
-  function _new() {
-    return {
-      matrix: ID.slice(),
-      multiply: _multiplyByMatrix,
-      rotate: _rotate,
-      scale: _scale,
-      translate: _translate
-    };
-  }
+  // function _new() {
+  //   return {
+  //     matrix: ID.slice(),
+  //     multiply: _multiplyByMatrix,
+  //     rotate: _rotate,
+  //     scale: _scale,
+  //     translate: _translate
+  //   };
+  // }
 
   // is this a matrix object or matrix array?
   function _multiplyByMatrix(mat) {
@@ -184,3 +186,37 @@ const Matrix = (() => {
     }
   }
 })();
+
+
+const Model = () => ({
+  // let id = ID.slice(),
+  //     rx = 0,
+  //     ry = 0,
+  //     rz = 0,
+      
+  //     sx = 0,
+  //     sy = 0,
+  //     sz = 0,
+      
+  //     tx = 0,
+  //     ty = 0,
+  //     tz = 0;
+
+  // return {  };    
+
+  rx: 10,
+  tx: 0,
+  sx: 0,
+
+  ry: 20,
+  ty: 0,
+  sy: 0,
+  
+  rz: 30,
+  tz: 0,
+  sz: 0,
+
+  toString: function() {
+    return `(${this.rx}, ${this.ry}, ${this.rz})`;
+  },
+});
