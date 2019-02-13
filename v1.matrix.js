@@ -4,7 +4,6 @@ const ID = `
 0 0 1 0
 0 0 0 1`.toFloat32Array();
 
-
 const Matrix = (() => {
 
   function getPerspective() {
@@ -49,15 +48,15 @@ const Matrix = (() => {
             ${z}`.toFloat32Array();
   }
 
-  // function _new() {
-  //   return {
-  //     matrix: ID.slice(),
-  //     multiply: _multiplyByMatrix,
-  //     rotate: _rotate,
-  //     scale: _scale,
-  //     translate: _translate
-  //   };
-  // }
+  function _new() {
+    return {
+      matrix: ID.slice(),
+      multiply: _multiplyByMatrix,
+      rotate: _rotate,
+      scale: _scale,
+      translate: _translate
+    };
+  }
 
   // is this a matrix object or matrix array?
   function _multiplyByMatrix(mat) {
@@ -187,7 +186,6 @@ const Matrix = (() => {
   }
 })();
 
-
 const Model = () => ({
   // let id = ID.slice(),
   //     rx = 0,

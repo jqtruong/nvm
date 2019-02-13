@@ -6,15 +6,14 @@ const Head = document.getElementsByTagName('head')[0],
 let N = 0,
     V = '';
 
-
 window.onload = (e) => {
   N = new URLSearchParams(location.search).get('v') || 1;
   V = `v${N}`;
 
   // Load JS and CSS
-  Helper.loadScript('main')
+  Helper.loadScript('matrix')
     .then(() => Helper.loadScript('design'))
-    .then(() => Helper.loadScript('matrix'))
+    .then(() => Helper.loadScript('main'))
     .then(() => new Promise((ok, argh) => {
       var link = document.createElement('link');
       link.rel = 'stylesheet';
@@ -27,15 +26,13 @@ window.onload = (e) => {
     .then(Game.load)
     .then(Game.start)
     .catch(err => l(`Game could not start due to ${err}.`));
-}
+};
 
-
 var Helper = (function() {
 
   var d = document;
 
   return {
-    rejectPromise: (msg) => new Promise((res, rej) => rej(msg)),
     getById: (id) => d.getElementById(id),
     get1ByTag: (name) => d.getElementsByTagName(name)[0],
     getAllByTag: (name) => d.getElementsByTagName(name),
@@ -46,14 +43,13 @@ var Helper = (function() {
 
       Body.appendChild(script);
     })
-  }
-})()
+  };
+})();
 
-
 const Game = (() => {
   let _id = 0,                  // request frame id
       _loads = [],
-      _looper = () => l('you should be spinning me right round...'),
+      _looper = () => l('you should be spinning me right round, but youre not...'),
 
       _msPassed = 0,
       _lastMs   = 0,
@@ -75,9 +71,10 @@ const Game = (() => {
             e(`Error: loading ${name}: ${msg}.`);
             return Promise.reject('failure to load');
           })
-      })
+      });
     },
     load: () => Promise.all(_loads.map(l => l.promise())),
+    newLoad: loads => Promise.all(Object.entries(loads).map(o => o[1].load())).catch(console.error),
 
     msPassed: 0,
     setLoop: (f) => _looper = f,
@@ -92,10 +89,9 @@ const Game = (() => {
       window.cancelAnimationFrame(_id);
       return _id;
     }
-  }
-})()
+  };
+})();
 
-
 var Events = (() => {
   
   window.onkeyup = (e) => {
@@ -108,17 +104,15 @@ var Events = (() => {
     default:
       l('Keycode:', e.keyCode);
     }
-  }
+  };
 
-})()
+})();
 
-
 String.prototype.toFloat32Array = function() {
   const a = this.trim().replace(/[\n ]+/g, ' ').split(' ');
   return new Float32Array(a);
-}
+};
 
-
 let COORDS = {
   'x0':  0, 'y0':  1, 'z0':  2, 'w0':  3,
   'x1':  4, 'y1':  5, 'z1':  6, 'w1':  7,
