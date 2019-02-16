@@ -180,8 +180,11 @@ const Matrix = (() => {
     new: _new,
     projection: [],
     load: function() {
-      var ortho = _new().rotate(10).multiply(getOrtho());
-      this.projection = ortho.matrix;
+      return new Promise((resolve, reject) => {
+        var ortho = _new().rotate(10).multiply(getOrtho());
+        this.projection = ortho.matrix;
+        resolve();
+      });
     }
   }
 })();

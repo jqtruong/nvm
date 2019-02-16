@@ -73,17 +73,19 @@
 
 *** Variable types
     - [[https://webglfundamentals.org/webgl/lessons/webgl-shaders-and-glsl.html#attributes][attributes]] :: data pulled from buffers
-    - [[https://webglfundamentals.org/webgl/lessons/webgl-shaders-and-glsl.html#uniforms][uniforms]] :: values that stay the same during for all
-         vertices of a single draw call
+    - [[https://webglfundamentals.org/webgl/lessons/webgl-shaders-and-glsl.html#uniforms][uniforms]] :: values that stay the same for all vertices
+         of a single draw call
 
 ** Topics
 
 *** [[https://webglfundamentals.org/webgl/lessons/webgl-drawing-multiple-things.html][Drawing multiple things]]
     For each thing you want to draw
     - call =gl.useProgram= for the program needed to draw.
-    - setup attributes for the thing you want to draw for
-      each attribute call =gl.bindBuffer=,
-      =gl.vertexAttribPointer=, =gl.enableVertexAttribArray=
+    - setup attributes for the thing you want to draw
+    - for each attribute call:
+      - =gl.bindBuffer=
+      - =gl.vertexAttribPointer=
+      - =gl.enableVertexAttribArray=
     - setup uniforms for the thing you want to draw
     - call =gl.uniformXXX= for each uniform
     - call =gl.activeTexture= and =gl.bindTexture= to assign
@@ -91,6 +93,7 @@
     - call =gl.drawArrays= or =gl.drawElements=
 
 *** Orthographic projection matrix
+
 *** Perspective projection matrix
     - fov :: 45° field of view
     - f :: inverse tangent of 22.5°
@@ -130,3 +133,4 @@
 ** IN_PROGRESS learn some WebGL
    Start with rotating colorful rectangles.
 
+** TODO draw multiple things

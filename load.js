@@ -23,8 +23,8 @@ window.onload = (e) => {
 
       Head.appendChild(link);
     }))
-    .then(Game.load)
-    .then(Game.start)
+    .then(() => Game.load())
+    .then(() => Game.start())
     .catch(err => l(`Game could not start due to ${err}.`));
 };
 
@@ -59,12 +59,17 @@ const Game = (() => {
     points: () => _points,
     zeroth: () => Math.ceil(_lastMs*60/1000)%60 == 0,
 
-    addLoad: (name, loader) => {
+    addLoad: entry => {
+      let name = entry[0],
+          obj = entry[1],
+          loader = obj.load;
+
       _loads.push({
-        name: name,
-        promise: () => loader()
+        name,
+        promise: () => loader.call(obj)
           .then(result => {
             l(`${name} loaded`);
+            l(obj);
             return result;
           })
           .catch(msg => {
@@ -73,8 +78,10 @@ const Game = (() => {
           })
       });
     },
+    addLoads: function(loads) {
+      Object.entries(loads).forEach(entry => this.addLoad(entry));
+    },
     load: () => Promise.all(_loads.map(l => l.promise())),
-    newLoad: loads => Promise.all(Object.entries(loads).map(o => o[1].load())).catch(console.error),
 
     msPassed: 0,
     setLoop: (f) => _looper = f,
@@ -84,7 +91,9 @@ const Game = (() => {
       _id = window.requestAnimationFrame(_looper);
     },
 
-    start: () => Game.loop.call(Game, 0),
+    start: function() {
+      this.loop(0);
+    },
     stop: () => {
       window.cancelAnimationFrame(_id);
       return _id;

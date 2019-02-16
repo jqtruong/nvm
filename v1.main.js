@@ -67,16 +67,15 @@ const Gl = (() => {
   return {
     load: function() {
       return new Promise((resolve, reject) => {
-        glCtx = Canvas.glCtx;
-        this.getAttrib  = glCtx.getAttribLocation.bind(glCtx);
-        this.getUniform = glCtx.getUniformLocation.bind(glCtx);
-        this.useProgram = glCtx.useProgram.bind(glCtx);
-        if (!(this.useProgram ||
-              this.getUniform ||
-              this.getAttrib)) {
-          reject('Gl did not initiate properly.');
+        if (!Canvas.glCtx) reject('no gl');
+        else {
+          glCtx = Canvas.glCtx;
+          this.getAttrib  = glCtx.getAttribLocation.bind(glCtx);
+          this.getUniform = glCtx.getUniformLocation.bind(glCtx);
+          this.useProgram = glCtx.useProgram.bind(glCtx);
+          if (this.useProgram && this.getUniform && this.getAttrib) resolve();
+          else reject('Gl did not initiate properly.');
         }
-        else resolve();
       });
     },
     clear: function() {
@@ -221,7 +220,7 @@ const Programs = (() => {
           ms = 0,
           angle = 1;
 
-      const finishInit = (glProgram) => {
+      const finishInit = glProgram => {
         program = glProgram;
 
         a_position = Gl.getAttrib(program, 'a_position');
@@ -258,7 +257,7 @@ const Programs = (() => {
           Gl.setUniform('4fv', u_projection_matrix, Matrix.projection);
           Gl.drawArrays('TRIANGLES', 0, 6);
         }
-      }
+      };
     })()
   };
 
@@ -286,14 +285,6 @@ const Frame = (() => {
 const V1 = (() => {
   l('Game v1...');
 
-  Game.newLoad({Canvas, Gl, Programs, Matrix});
-
-  // Game.addLoad('Canvas and Programs', function() {
-  //   return Canvas.load()
-  //     .then(Gl.load.bind(Gl))
-  //     .then(Programs.load)
-  //     .then(Matrix.load.bind(Matrix));
-  // });
-
+  Game.addLoads({Canvas, Gl, Matrix, Programs});
   Game.setLoop(Frame.next);
 })();
