@@ -1,120 +1,66 @@
-const Head = document.getElementsByTagName('head')[0],
-      Body = document.body,
-      l = console.log,
-      e = console.error;
-
-let N = 0,
-    V = '';
+var Head = document.getElementsByTagName('head')[0];
+var Body = document.body;
+var DEBUG = false;
+var l = (...msgs) => { if (DEBUG) console.log(msgs); }
+var e = console.error;
+var N = 0;
+var V = '';
 
 window.onload = (e) => {
   N = new URLSearchParams(location.search).get('v') || 1;
   V = `v${N}`;
+  DEBUG = !!(new URLSearchParams(location.search).get('d'));
+  l('debug', DEBUG);
 
   // Load JS and CSS
-  Helper.loadScript('matrix')
-    .then(() => Helper.loadScript('design'))
-    .then(() => Helper.loadScript('main'))
-    .then(() => new Promise((ok, argh) => {
-      var link = document.createElement('link');
-      link.rel = 'stylesheet';
-      link.type = 'text/css';
-      link.href = `${V}.css`;
-      link.onload = () => ok(true);
-
-      Head.appendChild(link);
-    }))
-    .then(() => Game.load())
-    .then(() => Game.start())
-    .catch(err => l(`Game could not start due to ${err}.`));
+  Helper.loadScripts(['Canvas', 'GL', 'Matrix', 'Programs', 'Frame', 'Events', 'Game'])
+    .then(() => Helper.loadCss('index'))
+    .then(() => window['Game'].start())
+    .catch(err => l('Game could not start due to', err));
 };
 
 var Helper = (function() {
 
-  var d = document;
+  let DOM = document;
 
   return {
-    getById: (id) => d.getElementById(id),
-    get1ByTag: (name) => d.getElementsByTagName(name)[0],
-    getAllByTag: (name) => d.getElementsByTagName(name),
-    loadScript: (name) => new Promise((ok, argh) => {
-      var script = document.createElement('script');
-      script.src = `${V}.${name}.js`;
-      script.onload = () => ok(true);
+    getById: function(id) { return DOM.getElementById(id) },
+    get1ByTag: function(name) { return DOM.getElementsByTagName(name)[0] },
+    getAllByTag: function(name) { return DOM.getElementsByTagName(name) },
+    loadCss: function(name) {
+      return new Promise((ok, argh) => {
+        let link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.type = 'text/css';
+        link.href = `${V}/${name}.css`;
+        link.onload = () => ok(true);
 
-      Body.appendChild(script);
-    })
-  };
-})();
-
-const Game = (() => {
-  let _id = 0,                  // request frame id
-      _loads = [],
-      _looper = () => l('you should be spinning me right round, but youre not...'),
-
-      _msPassed = 0,
-      _lastMs   = 0,
-      _points   = 0;
-
-  return {
-    points: () => _points,
-    zeroth: () => Math.ceil(_lastMs*60/1000)%60 == 0,
-
-    addLoad: entry => {
-      let name = entry[0],
-          obj = entry[1],
-          loader = obj.load;
-
-      _loads.push({
-        name,
-        promise: () => loader.call(obj)
-          .then(result => {
-            l(`${name} loaded`);
-            l(obj);
-            return result;
-          })
-          .catch(msg => {
-            e(`Error: loading ${name}: ${msg}.`);
-            return Promise.reject('failure to load');
-          })
+        Head.appendChild(link);
+      })
+    },
+    loadScript: function(name) {
+      let filename = `${V}/${name.toLowerCase()}.js`;
+      l('loading', filename);
+      return new Promise((ok, argh) => {
+        let script = document.createElement('script');
+        script.src = filename;
+        script.onload = () => {
+          return window[name].load()
+            .then(() => {
+              ok(JSON.stringify({ name, [name]: window[name] }))
+            })
+            .catch(error => argh(JSON.stringify({ name, error, [name]: window[name] })));
+        },
+        Body.appendChild(script);
       });
     },
-    addLoads: function(loads) {
-      Object.entries(loads).forEach(entry => this.addLoad(entry));
+    loadScripts: function(names) {
+      return names.reduce((acc, name) => acc.then(result => {
+        if (result) l('result', JSON.parse(result));
+        return this.loadScript(name);
+      }), Promise.resolve());
     },
-    load: () => Promise.all(_loads.map(l => l.promise())),
-
-    msPassed: 0,
-    setLoop: (f) => _looper = f,
-    loop: function(ms) {
-      this.msPassed = ms - _lastMs;
-      _lastMs = ms;
-      _id = window.requestAnimationFrame(_looper);
-    },
-
-    start: function() {
-      this.loop(0);
-    },
-    stop: () => {
-      window.cancelAnimationFrame(_id);
-      return _id;
-    }
   };
-})();
-
-var Events = (() => {
-  
-  window.onkeyup = (e) => {
-    switch (e.keyCode) {
-
-    case 27:                      // esc
-      l(`stopped game at ${Game.stop()}`);
-      break;
-
-    default:
-      l('Keycode:', e.keyCode);
-    }
-  };
-
 })();
 
 String.prototype.toFloat32Array = function() {
@@ -122,17 +68,17 @@ String.prototype.toFloat32Array = function() {
   return new Float32Array(a);
 };
 
-let COORDS = {
+var COORDS = {
   'x0':  0, 'y0':  1, 'z0':  2, 'w0':  3,
   'x1':  4, 'y1':  5, 'z1':  6, 'w1':  7,
   'x2':  8, 'y2':  9, 'z2': 10, 'w2': 11,
   'x3': 12, 'y3': 13, 'z3': 14, 'w3': 15,
 };
 
-const X = 'x',
-      Y = 'y',
-      Z = 'z',
-      W = 'w';
+var X = 'x';
+var Y = 'y';
+var Z = 'z';
+var W = 'w';
 
 Float32Array.prototype.row = function(r) {
   return [ this[COORDS[`x${r}`]],

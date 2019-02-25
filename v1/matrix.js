@@ -4,7 +4,18 @@ const ID = `
 0 0 1 0
 0 0 0 1`.toFloat32Array();
 
-const Matrix = (() => {
+var Matrix = (() => {
+
+  return {
+    new: _new,
+    projection: [],
+    load: function() {
+      return new Promise((resolve, reject) => {
+        this.projection = _new().rotate(10).multiply(getOrtho()).matrix;
+        resolve();
+      });
+    }
+  }
 
   function getPerspective() {
     // @TODO get some "perspective" on these
@@ -28,8 +39,8 @@ const Matrix = (() => {
   function getOrtho() {
     const n = .1,
           f = 400,
-          xs =  2/Canvas.width,
-          ys = -2/Canvas.height,
+          xs =  2/window['Canvas'].width,
+          ys = -2/window['Canvas'].height,
           zs =  2/(f - n);      // doesn't seem to matter for ortho
 
     return `${xs}     0     0     0
@@ -49,18 +60,24 @@ const Matrix = (() => {
   }
 
   function _new() {
-    return {
+    var mat = {
       matrix: ID.slice(),
       multiply: _multiplyByMatrix,
       rotate: _rotate,
       scale: _scale,
       translate: _translate
     };
+
+    return mat;
+  }
+
+  function itsAhMe() {
+    console.log('mario', this);
   }
 
   // is this a matrix object or matrix array?
   function _multiplyByMatrix(mat) {
-    var result = new Float32Array(16); // needed ; so [ doesn't
+    var result = new Float32Array(16); // needed \; so \[ doesn't
                                        // activate
 
     [ result[COORDS.x0],
@@ -84,7 +101,6 @@ const Matrix = (() => {
       result[COORDS.w3] ] = _multiplyByVector(this.matrix, mat.col(W));
 
     this.matrix = result;
-
     return this;
   }
 
@@ -174,18 +190,6 @@ const Matrix = (() => {
     this.matrix[COORDS.z3] = z;
 
     return this;
-  }
-
-  return {
-    new: _new,
-    projection: [],
-    load: function() {
-      return new Promise((resolve, reject) => {
-        var ortho = _new().rotate(10).multiply(getOrtho());
-        this.projection = ortho.matrix;
-        resolve();
-      });
-    }
   }
 })();
 

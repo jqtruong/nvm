@@ -10,7 +10,8 @@ uniform mat4 u_projection_matrix;
 varying vec4 v_color;
 
 void main(void) {
-  gl_Position = u_projection_matrix
+  gl_Position =
+    u_projection_matrix
     * u_model_matrix
     * vec4(a_position, 0.0, 1.0);
 
