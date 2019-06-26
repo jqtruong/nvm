@@ -36,7 +36,8 @@ var Programs = (() => {
     var program;
     var a_position;
     var a_color;
-    var u_model_matrix, model;
+    var u_model_matrix;
+    var model;
     var u_projection_matrix;
     var positionBuffer;
     var colorBuffer;
@@ -45,7 +46,6 @@ var Programs = (() => {
 
     return {
       init: function() {
-        console.log('init');
         model = window['Matrix'].new()
         return window['GL'].setupProgram().then(finishInit);
       },
@@ -74,7 +74,7 @@ var Programs = (() => {
 
     function update() {
       ms += Game.msPassed;
-      if (ms > 33) {
+      if (ms > 16) {
         model
           .rotate(0, angle)
           .translate((window['Canvas'].width - w)/2,

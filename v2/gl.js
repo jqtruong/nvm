@@ -56,8 +56,8 @@ var GL = (() => {
       _glCtx.viewport(0, 0, window['Canvas'].width, window['Canvas'].height);
       _glCtx.clearColor(0.0, 0.0, 0.0, 1.0); // Clear to black, fully opaque
       _glCtx.clearDepth(1.0);                // Clear everything
-      _glCtx.enable(_glCtx.DEPTH_TEST);      // Enable depth testing
-      _glCtx.depthFunc(_glCtx.LEQUAL);       // Near things obscure
+      _glCtx.enable(_glCtx.DEPTH_TEST);       // Enable depth testing
+      _glCtx.depthFunc(_glCtx.LEQUAL);        // Near things obscure
       _glCtx.clear(_glCtx.COLOR_BUFFER_BIT | _glCtx.DEPTH_BUFFER_BIT);
     },
 
@@ -73,7 +73,7 @@ var GL = (() => {
 
     drawArrays: function(mode, offset, count) {
       var glMode = _glCtx[mode];
-      if (VARIANTS.DRAW_MODES.includes(mode) && glMode) {
+      if (VARIANTS.DRAW_MODES.includes(mode)) {
         _glCtx.drawArrays(glMode, offset, count);
       } else {
         e(`_glCtx.${mode} does not exist.`);
@@ -88,15 +88,11 @@ var GL = (() => {
             offset } = Object.assign({}, defaults.vertexPointer, opts);
 
       var glType = _glCtx[type];
-      if (VARIANTS.TYPES.includes(type)) {
+      if (VARIANTS.TYPES.includes(type) && glType) {
         _glCtx.enableVertexAttribArray(attr);
         _glCtx.bindBuffer(_glCtx.ARRAY_BUFFER, buffer);
-        _glCtx.vertexAttribPointer(attr,
-                                   numComponents,
-                                   glType,
-                                   normalize,
-                                   stride,
-                                   offset);
+        _glCtx.vertexAttribPointer(attr, numComponents, glType, normalize,
+                               stride, offset);
       } else {
         e(`_glCtx.${type} does not exist.`);
       }        

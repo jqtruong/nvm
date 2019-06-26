@@ -7,6 +7,22 @@
 
 * WebGL
 
+** [2019-04-26 Fri]
+   geez... a year later. learning from [[file:/opt/jqtruong/programmingtil-webgl][ProgrammingTIL -
+   WebGL]]. really great set of  tutorials, so far.
+
+   in tutorial 26, color gets interpolated from one point to
+   another; it's kinda cool.
+
+   in tutorial 27, i'm drawing a circle with a variant
+   number of sides, and it's interesting how an inner circle
+   is drawn. it draws using =TRIANGLE_STRIP=, which acts
+   like a =LINE_STRIP=, ie. the last node connects to the
+   the previous node, but the previous two nodes for a
+   triangle. (see tutorial 25 to play with the different
+   draw styles.) #27 loops through 360° and draws super thin
+   triangles. 
+
 ** [2018-04-13 Fri]
    wow, i have been working little by little but i really
    suck at updating this log.
@@ -118,15 +134,19 @@
    Start a webserver to serve the shader files, just for
    better legibility.
 
-   #+BEGIN_SRC lisp
-     (ql:quickload :hunchentoot)
-     (hunchentoot:start (make-instance 'hunchentoot:easy-acceptor :port 4242))
-     (push (hunchentoot:create-folder-dispatcher-and-handler
-            "/nvm/" "~/work/gamedev/passed-in-future/nvm/")
-           hunchentoot:*dispatch-table*)
-   #+END_SRC
+*** Lisp way
+    #+BEGIN_SRC lisp
+      (ql:quickload :hunchentoot)
+      (hunchentoot:start (make-instance 'hunchentoot:easy-acceptor :port 4242))
+      (push (hunchentoot:create-folder-dispatcher-and-handler
+             "/nvm/" "~/work/gamedev/passed-in-future/nvm/")
+            hunchentoot:*dispatch-table*)
+    #+END_SRC
+    
+    then visit http://localhost:4242/nvm/index.html.
 
-   then visit http://localhost:4242/nvm/index.html.
+*** Node way
+    =http-server= boom!
 
 * Tasks
 
