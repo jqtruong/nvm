@@ -61,11 +61,6 @@ var Helper = (function() {
   };
 })();
 
-String.prototype.toFloat32Array = function() {
-  const a = this.trim().replace(/[\n ]+/g, ' ').split(' ');
-  return new Float32Array(a);
-};
-
 var COORDS = {
   'x0':  0, 'y0':  1, 'z0':  2, 'w0':  3,
   'x1':  4, 'y1':  5, 'z1':  6, 'w1':  7,
@@ -77,6 +72,10 @@ var X = 'x';
 var Y = 'y';
 var Z = 'z';
 var W = 'w';
+
+//////////////////////////////////////////////////////////////////////
+// Float32Array //
+//////////////////
 
 Float32Array.prototype.row = function(r) {
   return [ this[COORDS[`x${r}`]],
@@ -91,6 +90,10 @@ Float32Array.prototype.col = function(c) {
            this[COORDS[`${c}2`]],
            this[COORDS[`${c}3`]]  ];
 };
+
+//////////////////////////////////////////////////////////////////////
+// Math //
+//////////
 
 Math.interpolate = function(options) {
   let defaults = { input:  [ 0, 0],
@@ -123,3 +126,12 @@ Math.interpolate = function(options) {
     return Math.abs(low - high);
   }
 };
+
+//////////////////////////////////////////////////////////////////////
+// String //
+////////////
+String.prototype.toFloat32Array = function() {
+  const a = this.trim().replace(/[\n ]+/g, ' ').split(' ');
+  return new Float32Array(a);
+};
+
