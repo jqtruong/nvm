@@ -56,8 +56,8 @@ var GL = (() => {
       _glCtx.viewport(0, 0, window['Canvas'].width, window['Canvas'].height);
       _glCtx.clearColor(0.0, 0.0, 0.0, 1.0); // Clear to black, fully opaque
       _glCtx.clearDepth(1.0);                // Clear everything
-      _glCtx.enable(_glCtx.DEPTH_TEST);       // Enable depth testing
-      _glCtx.depthFunc(_glCtx.LEQUAL);        // Near things obscure
+      _glCtx.enable(_glCtx.DEPTH_TEST);      // Enable depth testing
+      _glCtx.depthFunc(_glCtx.LEQUAL);       // Near things obscure
       _glCtx.clear(_glCtx.COLOR_BUFFER_BIT | _glCtx.DEPTH_BUFFER_BIT);
     },
 
@@ -82,7 +82,7 @@ var GL = (() => {
 
     sendVertices: function (opts, buffer, attr) {
       var { numComponents,
-            type = 'FLOAT',
+            type,
             normalize,
             stride,
             offset } = Object.assign({}, defaults.vertexPointer, opts);
@@ -91,8 +91,7 @@ var GL = (() => {
       if (VARIANTS.TYPES.includes(type) && glType) {
         _glCtx.enableVertexAttribArray(attr);
         _glCtx.bindBuffer(_glCtx.ARRAY_BUFFER, buffer);
-        _glCtx.vertexAttribPointer(attr, numComponents, glType, normalize,
-                               stride, offset);
+        _glCtx.vertexAttribPointer(attr, numComponents, glType, normalize, stride, offset);
       } else {
         e(`_glCtx.${type} does not exist.`);
       }        
@@ -110,34 +109,33 @@ var GL = (() => {
     setupProgram: function (vrt = 'default', frg = 'default') {
       var vrtFile = `${V}/${vrt}-vrt.c`;
       var frgFile = `${V}/${frg}-frg.c`;
-
-      _program = _glCtx.createProgram()
+      var program = _glCtx.createProgram();
 
       return compileShader(_glCtx.VERTEX_SHADER, vrtFile)
-        .then(attachVertexShader)
+        .then(shader => attachVertexShader(shader, program))
         .then(() => compileShader(_glCtx.FRAGMENT_SHADER, frgFile))
-        .then(attachFragmentShader);
+        .then(shader => attachFragmentShader(shader, program));
     },
   };
 
-  function attachFragmentShader(frgShader) {
+  function attachFragmentShader(frgShader, program) {
     var status = (() => {
-      _glCtx.attachShader(_program, frgShader);
-      _glCtx.linkProgram(_program);
-      return _glCtx.getProgramParameter(_program, _glCtx.LINK_STATUS);
+      _glCtx.attachShader(program, frgShader);
+      _glCtx.linkProgram(program);
+      return _glCtx.getProgramParameter(program, _glCtx.LINK_STATUS);
     })();
 
     if (!status) {
-      var info = _glCtx.getProgramInfoLog(_program);
+      var info = _glCtx.getProgramInfoLog(program);
       e('Could not link WebGL program' + (info ? `:\n\n${info}` : '.'));
       return Promise.reject('bad program');
     }
 
-    return _program;
+    return Promise.resolve(program);
   }
 
-  function attachVertexShader(vrtShader) {
-    return _glCtx.attachShader(_program, vrtShader);
+  function attachVertexShader(vrtShader, program) {
+    return _glCtx.attachShader(program, vrtShader);
   }
 
   function checkShader(shader) {

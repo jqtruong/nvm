@@ -1,7 +1,7 @@
 var Head = document.getElementsByTagName('head')[0];
 var Body = document.body;
 var DEBUG = false;
-var l = (...msgs) => { if (DEBUG) console.log(msgs); }
+var l = (...msgs) => { if (DEBUG) console.log(...msgs); }
 var e = console.error;
 var N = 0;
 var V = '';
@@ -46,9 +46,7 @@ var Helper = (function() {
         script.src = filename;
         script.onload = () => {
           return window[name].load()
-            .then(() => {
-              ok(JSON.stringify({ name, [name]: window[name] }))
-            })
+            .then(() => ok(JSON.stringify({ name, [name]: window[name] })))
             .catch(error => argh(JSON.stringify({ name, error, [name]: window[name] })));
         },
         Body.appendChild(script);
@@ -56,7 +54,7 @@ var Helper = (function() {
     },
     loadScripts: function(names) {
       return names.reduce((acc, name) => acc.then(result => {
-        if (result) l('result', JSON.parse(result));
+        if (result) l(JSON.parse(result));
         return this.loadScript(name);
       }), Promise.resolve());
     },
@@ -92,4 +90,36 @@ Float32Array.prototype.col = function(c) {
            this[COORDS[`${c}1`]],
            this[COORDS[`${c}2`]],
            this[COORDS[`${c}3`]]  ];
+};
+
+Math.interpolate = function(options) {
+  let defaults = { input:  [ 0, 0],
+                   output: [-1, 1],
+                   steps:  null     };
+
+  let { input,
+        output,
+        steps   } = Object.assign(defaults, options);
+
+  let deltas = { input:  delta(input),
+                 output: delta(output) };
+
+  let ratio = deltas.output/deltas.input;
+
+  if (!steps) steps = deltas.input;
+  if (!steps) return [];        // if input range is 0
+  let step = deltas.input/steps;
+
+  let values = [];
+  for (i=0; i<=deltas.input; i+=step) {
+    values.push(output[0] + (i*ratio));
+  }
+
+  return values;
+
+  ////////////////////////////////////////////////////////////////////////////////
+
+  function delta([low, high]) {
+    return Math.abs(low - high);
+  }
 };
