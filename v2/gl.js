@@ -67,6 +67,7 @@ var GL = (() => {
       _glCtx.bufferData(_glCtx.ARRAY_BUFFER, data, _glCtx.STATIC_DRAW);
       return buffer;
     },
+
     getAttrib:  null,
     getUniform: null,
     useProgram: null,
@@ -107,8 +108,8 @@ var GL = (() => {
     },
 
     setupProgram: function (vrt = 'default', frg = 'default') {
-      var vrtFile = `${V}/${vrt}-vrt.c`;
-      var frgFile = `${V}/${frg}-frg.c`;
+      var vrtFile = `${V}/shaders/${vrt}-vrt.c`;
+      var frgFile = `${V}/shaders/${frg}-frg.c`;
       var program = _glCtx.createProgram();
 
       return compileShader(_glCtx.VERTEX_SHADER, vrtFile)

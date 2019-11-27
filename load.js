@@ -6,6 +6,16 @@ var e = console.error;
 var N = 0;
 var V = '';
 
+const PROGRAMS = ['programs/drawing-modes',
+                 'programs/drawing-modes-2'];
+const SCRIPTS = ['Canvas',
+                 'GL',
+                 'Matrix',
+                 'Programs',
+                 'Frame', 
+                 'Events',
+                 'Game'];
+
 window.onload = (e) => {
   N = new URLSearchParams(location.search).get('v') || 1;
   V = `v${N}`;
@@ -13,10 +23,11 @@ window.onload = (e) => {
   l('debug', DEBUG);
 
   // Load JS and CSS
-  Helper.loadScripts(['Canvas', 'GL', 'Matrix', 'Programs', 'Frame', 'Events', 'Game'])
+  Helper.loadPrograms(PROGRAMS)
+    .then(() => Helper.loadScripts(SCRIPTS))
     .then(() => Helper.loadCss('index'))
     .then(() => window['Game'].start())
-    .catch(err => l('Game could not start due to', err));
+    .catch(err => l('Game could not start due to', JSON.parse(err)));
 };
 
 var Helper = (function() {
@@ -38,9 +49,20 @@ var Helper = (function() {
         Head.appendChild(link);
       })
     },
+    loadProgram: function(name) {
+      let filename = `${V}/${name}.js`;
+      l('loading program', filename);
+      return new Promise((ok, argh) => {
+        let script = document.createElement('script');
+        script.src = filename;
+        script.onload = () => ok(JSON.stringify({ name, [name]: window[name] }));
+        script.onerror = () => argh(JSON.stringify({ name, error: `failed to load ${filename}`, [name]: window[name] }));
+        Body.appendChild(script);
+      });
+    },
     loadScript: function(name) {
       let filename = `${V}/${name.toLowerCase()}.js`;
-      l('loading', filename);
+      l('loading script', filename);
       return new Promise((ok, argh) => {
         let script = document.createElement('script');
         script.src = filename;
@@ -51,6 +73,12 @@ var Helper = (function() {
         },
         Body.appendChild(script);
       });
+    },
+    loadPrograms: function(names) {
+      return names.reduce((acc, name) => acc.then(result => {
+        if (result) l(JSON.parse(result));
+        return this.loadProgram(name);
+      }), Promise.resolve());
     },
     loadScripts: function(names) {
       return names.reduce((acc, name) => acc.then(result => {

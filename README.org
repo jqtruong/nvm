@@ -5,7 +5,17 @@
   In honor of my grandfather whose mind was so emcompassing
   that it left its shell long before his body realized.
 
+
 * WebGL
+
+** [2019-11-26 Tue]
+   i remembered that i use =JSON.stringify= in the =load*=
+   functions because some =window= objects are big and will
+   be truncated, so to see the full logs.
+
+   trying to modularize programs. right now stuck on loading
+   from =drawing-modes=, =window[programs/drawing-modes]= is
+   undefined because i need to pass the params on load.
 
 ** [2019-04-26 Fri]
    geez... a year later. learning from [[file:/opt/jqtruong/programmingtil-webgl][ProgrammingTIL -
@@ -23,6 +33,7 @@
    draw styles.) #27 loops through 360° and draws super thin
    triangles. 
 
+
 ** [2018-04-13 Fri]
    wow, i have been working little by little but i really
    suck at updating this log.
@@ -32,10 +43,12 @@
    everything look 3d. so now i can start adding those
    windows!
 
+
 ** [2018-02-09 Fri]
    based on this [[https://computergraphics.stackexchange.com/questions/1608/how-to-combine-rotation-in-2-axis-into-one-matrix][answer]], i can rotate on multiple axis by
    multiplying the transformed matrices together:
    : RotXMat * RotYMat * RotZMat
+
 
 ** [2018-02-04 Sun]
    trying to get ortho to show. i think that's what i need:
@@ -47,6 +60,7 @@
       front and behind other objects.
    2. vertices aren't normalized, since they are done in the
       projection.
+
 
 ** [2018-01-25 Thu]
    .o0(i really need to remember to write my journey through
@@ -66,12 +80,14 @@
 
    then add a rotation to the rectangle.
 
+
 ** [2017-12-27 Wed]
    i got the canvas almost set up. programs go in there
    rather fitly, but wondering about buffers and/or
    variables. in nullprogram's sample code, the variables
    are attached at render, and, in learningwebgl, they are
    attached during program inititialization and in render.
+
 
 ** [2017-12-25 Mon]
    looks like there will be many programs for each thing i
@@ -87,32 +103,50 @@
       work out its colour.
    4. Write it to the frame buffer.
 
+
 *** Variable types
     - [[https://webglfundamentals.org/webgl/lessons/webgl-shaders-and-glsl.html#attributes][attributes]] :: data pulled from buffers
     - [[https://webglfundamentals.org/webgl/lessons/webgl-shaders-and-glsl.html#uniforms][uniforms]] :: values that stay the same for all vertices
-         of a single draw call
+         of a single draw call; most likely to act on an
+         attribute.
+
 
 ** Topics
 
 *** [[https://webglfundamentals.org/webgl/lessons/webgl-drawing-multiple-things.html][Drawing multiple things]]
-    For each thing you want to draw
-    - call =gl.useProgram= for the program needed to draw.
+    For each thing you want to draw, you use a program and
+    follow these steps:
+    - create a buffer with the vertices data
     - setup attributes for the thing you want to draw
-    - for each attribute call:
-      - =gl.bindBuffer=
-      - =gl.vertexAttribPointer=
-      - =gl.enableVertexAttribArray=
-    - setup uniforms for the thing you want to draw
-    - call =gl.uniformXXX= for each uniform
+    - for each attribute call (see [[file:v2/gl.js::sendVertices:%20function%20(opts,%20buffer,%20attr)%20{][=sendVertices=]]):
+      - =gl.enableVertexAttribArray= :: the attribute name
+           that will receive the data
+      - =gl.bindBuffer= :: sets =buffer= as the web GL
+           context's =ARRAY_BUFFER= to pass the data to the
+           attribute
+      - =gl.vertexAttribPointer= :: sets the attribute's
+           parameters, eg. number of components, type, etc.
+    - call =gl.useProgram= for the program needed to draw
+    - setup uniforms for the thing you want to draw (to test)
+    - call =gl.uniformXXX= for each uniform (to test)
     - call =gl.activeTexture= and =gl.bindTexture= to assign
-      textures to texture units.
-    - call =gl.drawArrays= or =gl.drawElements=
+      textures to texture units. (to test)
+    - call =gl.drawArrays= or =gl.drawElements= (to test the
+      latter)
+
+    `drawArrays` needs to run last because it is the
+    bridging function that to connect the two sides, the
+    data and the buffer to the shader program, after
+    they're set.
+
 
 *** Orthographic projection matrix
+
 
 *** Perspective projection matrix
     - fov :: 45° field of view
     - f :: inverse tangent of 22.5°
+
 
 * Matrix
 
@@ -125,10 +159,12 @@
     3x3 ⋅ 3x1 = 3x1
     AxB ⋅ CxD = AxD as long as B == C
    
+
 * Refs
   - http://nullprogram.com/sphere-js/
   - [[http://learningwebgl.com/blog/?p=859][learningwebgl: blending]]
   - [[https://www.scratchapixel.com/lessons/3d-basic-rendering/perspective-and-orthographic-projection-matrix/orthographic-projection-matrix][ortho projection explaination]]
+  - [[file:/opt/jqtruong/programmingtil-webgl][ProgrammingTIL - WebGL]]
 
 ** Webserver
    Start a webserver to serve the shader files, just for
@@ -145,12 +181,20 @@
     
     then visit http://localhost:4242/nvm/index.html.
 
+
 *** Node way
     =http-server= boom!
+
 
 * Tasks
 
 ** IN_PROGRESS learn some WebGL
-   Start with rotating colorful rectangles.
 
-** TODO draw multiple things
+*** DONE Start with rotating colorful rectangles.
+
+*** TODO animate a sine wave
+
+
+** DONE draw multiple things
+
+
