@@ -105,32 +105,38 @@ var W = 'w';
 // Float32Array //
 //////////////////
 
-Float32Array.prototype.row = function(r) {
-  return [ this[COORDS[`x${r}`]],
-           this[COORDS[`y${r}`]],
-           this[COORDS[`z${r}`]],
-           this[COORDS[`w${r}`]]  ];
+Float32Array.prototype.row = function (r) {
+  return [
+    this[COORDS[`x${r}`]],
+    this[COORDS[`y${r}`]],
+    this[COORDS[`z${r}`]],
+    this[COORDS[`w${r}`]],
+  ];
 };
 
-Float32Array.prototype.col = function(c) {
-  return [ this[COORDS[`${c}0`]],
-           this[COORDS[`${c}1`]],
-           this[COORDS[`${c}2`]],
-           this[COORDS[`${c}3`]]  ];
+Float32Array.prototype.col = function (c) {
+  return [
+    this[COORDS[`${c}0`]],
+    this[COORDS[`${c}1`]],
+    this[COORDS[`${c}2`]],
+    this[COORDS[`${c}3`]],
+  ];
 };
 
 //////////////////////////////////////////////////////////////////////
 // Math //
 //////////
 
-Math.interpolate = function(options) {
-  let defaults = { input:  [ 0, 0],
-                   output: [-1, 1],
-                   steps:  null     };
+Math.interpolate = function (options) {
+  let defaults = {
+    input  : [ 0, 0],
+    output : [-1, 1],
+    steps  : null,
+  };
 
   let { input,
         output,
-        steps   } = Object.assign(defaults, options);
+        steps } = Object.assign(defaults, options);
 
   let deltas = { input:  delta(input),
                  output: delta(output) };
@@ -148,7 +154,7 @@ Math.interpolate = function(options) {
 
   return values;
 
-  ////////////////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////
 
   function delta([low, high]) {
     return Math.abs(low - high);

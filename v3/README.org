@@ -1,0 +1,11 @@
+Without a model, and a vertex shader setting the
+=gl_Position= to 0 for x, y, and z, such as:
+
+#+BEGIN_SRC c
+  void main() {
+    gl_Position = vec4(0.0, 0.0, 0.0, 1.0); // Set the vertex coordinates of the point
+    gl_PointSize = 10.0;                    // Set the point size
+  }
+#+END_SRC
+
+effectively draws a dot in the center of the screen.
