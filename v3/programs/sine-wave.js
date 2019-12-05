@@ -1,4 +1,4 @@
-window['programs/sine-waves'] = (() => {
+window['programs/sine-wave'] = (() => {
   var _ms = 0;
   var _program = null;
   var _lim = 10000;

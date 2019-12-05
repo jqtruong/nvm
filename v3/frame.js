@@ -12,7 +12,7 @@ var Frame = (() => {
 
   function render() {
     window['GL'].clear();
-    window['Programs'].renderAll();
+    window['Programs'].run();
   }
 
 })();

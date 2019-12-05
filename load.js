@@ -6,8 +6,6 @@ var e = console.error;
 var N = 0;
 var V = '';
 
-const PROGRAMS = ['programs/drawing-modes',
-                 'programs/drawing-modes-2'];
 const SCRIPTS = ['Canvas',
                  'GL',
                  'Matrix',
@@ -23,8 +21,7 @@ window.onload = (e) => {
   l('debug', DEBUG);
 
   // Load JS and CSS
-  Helper.loadPrograms(PROGRAMS)
-    .then(() => Helper.loadScripts(SCRIPTS))
+  Helper.loadScripts(SCRIPTS)
     .then(() => Helper.loadCss('index'))
     .then(() => window['Game'].start())
     .catch(err => l('Game could not start due to', JSON.parse(err)));
@@ -49,17 +46,35 @@ var Helper = (function() {
         Head.appendChild(link);
       })
     },
+
     loadProgram: function(name) {
       let filename = `${V}/${name}.js`;
       l('loading program', filename);
       return new Promise((ok, argh) => {
         let script = document.createElement('script');
         script.src = filename;
-        script.onload = () => ok(JSON.stringify({ name, [name]: window[name] }));
-        script.onerror = () => argh(JSON.stringify({ name, error: `failed to load ${filename}`, [name]: window[name] }));
+        script.onload = () => {
+          console.log('loaded', name, window[name]);
+          return window[name]
+            .init()
+            .then((prog) => ok(JSON.stringify({ name, prog, [name]: window[name] })))
+            .catch(error => argh(JSON.stringify({ name, error, [name]: window[name] })));
+        };
+        script.onerror = () => argh(JSON.stringify({
+          name,
+          error: `failed to load ${filename}`,
+          [name]: window[name],
+        }));
         Body.appendChild(script);
       });
     },
+    loadPrograms: function(names) {
+      return names.reduce((acc, { name }) => acc.then(result => {
+        if (result) l(JSON.parse(result));
+        return this.loadProgram(name);
+      }), Promise.resolve());
+    },
+
     loadScript: function(name) {
       let filename = `${V}/${name.toLowerCase()}.js`;
       l('loading script', filename);
@@ -70,15 +85,14 @@ var Helper = (function() {
           return window[name].load()
             .then(() => ok(JSON.stringify({ name, [name]: window[name] })))
             .catch(error => argh(JSON.stringify({ name, error, [name]: window[name] })));
-        },
+        };
+        script.onerror = () => argh(JSON.stringify({
+          name,
+          error: `failed to load ${filename}`,
+          [name]: window[name],
+        }));
         Body.appendChild(script);
       });
-    },
-    loadPrograms: function(names) {
-      return names.reduce((acc, name) => acc.then(result => {
-        if (result) l(JSON.parse(result));
-        return this.loadProgram(name);
-      }), Promise.resolve());
     },
     loadScripts: function(names) {
       return names.reduce((acc, name) => acc.then(result => {
