@@ -13,6 +13,7 @@
    parts in common. seems =update()= is the only difference,
    or really the =render()=; there is room for improvement.
 
+
 ** [2019-11-26 Tue]
    i remembered that i use =JSON.stringify= in the =load*=
    functions because some =window= objects are big and will
@@ -21,6 +22,41 @@
    trying to modularize programs. right now stuck on loading
    from =drawing-modes=, =window[programs/drawing-modes]= is
    undefined because i need to pass the params on load.
+
+
+** [2019-09-15 Sun]
+   code has been revamped, here are my latest notes:
+
+   - =Math.interpolate= works fine for now; i can move an
+     object relatively smooth. Thinking about it, this seems
+     to be more for program-animated objects, but i am
+     missing the comprehension of animating with the context
+     of how much time as passed. In this case, i'm just
+     moving 2 POINTS and 2 TRIANGLES across the screen in 1
+     second. I interpolated 1s in milliseconds, so 1000
+     indices into an array of values ranging from -.5 to
+     .5. I accumulate the passing of game time into the
+     program's =_ms=, and use its floored value as the
+     index. It works, but i wonder how else i could do it
+     that would work for this example; or maybe i'm not
+     understanding the way MDN does it.
+
+   - code reformatting in an attempt to make it look
+     cleaner, eg. i moved the =Canvas= methods definitions
+     out and return just ={ load }=, then add a comment-line
+     to give a visual separation of the function's metadata.
+
+   - the animation looks fine, but i did have to slow it
+     down from 1 to 10 seconds, and i think that's good
+     enough for me to move on. Once =_ms= reaches that
+     limit, it goes back to 0. The interpolation method
+     could be improved by adding more levels, ie. =[0, 500,
+     1000]= interpolates as =[-1, 1, -1]=, then i could make
+     the drawings bounce. anyway, i just had a revelation on
+     how to add multiple models: they are Programs! Create a
+     new program for different manipulations, and pass
+     similar models to each relevant one.
+
 
 ** [2019-04-26 Fri]
    geez... a year later. learning from [[file:/opt/jqtruong/programmingtil-webgl][ProgrammingTIL -
@@ -203,3 +239,7 @@
 ** DONE draw multiple things
 
 
+** TODO rotate multiple windows
+   need to get a nice effect while spinning the
+   windows... like some overlay maybe... idk, just make it
+   shiny.
