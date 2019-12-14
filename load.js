@@ -6,13 +6,15 @@ var e = console.error;
 var N = 0;
 var V = '';
 
-const SCRIPTS = ['Canvas',
-                 'GL',
-                 'Matrix',
-                 'Programs',
-                 'Frame', 
-                 'Events',
-                 'Game'];
+const SCRIPTS = [
+  'Canvas'   ,
+  'GL'       ,
+  'Matrix'   ,
+  'Programs' ,
+  'Frame'    , 
+  'Events'   ,
+  'Game'     ,
+];
 
 window.onload = (e) => {
   N = new URLSearchParams(location.search).get('v') || 1;
@@ -21,11 +23,71 @@ window.onload = (e) => {
   l('debug', DEBUG);
 
   // Load JS and CSS
-  Helper.loadScripts(SCRIPTS)
+  Load.scripts(SCRIPTS, 'load')
     .then(() => Helper.loadCss('index'))
     .then(() => window['Game'].start())
     .catch(err => l('Game could not start due to', JSON.parse(err)));
 };
+
+var Load = (() => {
+
+  return {
+    scripts: function (names, callback) {
+      return names.reduce((acc, name) => acc.then(result => {
+        if (result) l(JSON.parse(result));
+        return _loadScript(name, callback);
+      }), Promise.resolve());
+    },
+  };
+
+  function _createScript(filename) {
+    return new Promise((ok, argh) => {
+      let script = document.createElement('script');
+      script.src = filename;
+      script.onload = _onLoadCallback(name, ok, argh, cb);
+      script.onerror = _onErrorCallback(name, argh);
+    });
+  }
+
+  function _makeFileName(path) {
+    const filename = `${V}/${name}.js`;
+    return filename;
+  }
+
+  function _loadScript(name, callback) {
+    let filename = `${V}/${name}.js`;
+    l('loading script', filename);
+    return new Promise((ok, argh) => {
+      let script = document.createElement('script');
+      script.src = filename;
+      script.onload = _onLoadCallback(name, ok, argh, callback);
+      script.onerror = _onErrorCallback(name, argh);
+      Body.appendChild(script);
+    });
+  }
+
+  function _onErrorCallback(name, argh) {
+    return () => argh(JSON.stringify({
+      name,
+      error: `failed to load ${name}`,
+      [name]: window[name],
+    }));
+  }
+
+  function _onLoadCallback(name, ok, argh, callback) {
+    return () => {
+      let obj = {
+        name,
+        [name]: window[name]
+      };
+      if (!callback) return ok(JSON.stringify(obj));
+      window[name][callback]()
+        .then(() => ok(JSON.stringify(obj)))
+        .catch(error => argh(JSON.stringify({ ...obj, error })));
+    };
+  }
+
+})();
 
 var Helper = (function() {
 
@@ -47,60 +109,63 @@ var Helper = (function() {
       })
     },
 
-    loadProgram: function(name) {
-      let filename = `${V}/${name}.js`;
-      l('loading program', filename);
-      return new Promise((ok, argh) => {
-        let script = document.createElement('script');
-        script.src = filename;
-        script.onload = () => {
-          console.log('loaded', name, window[name]);
-          return window[name]
-            .init()
-            .then((prog) => ok(JSON.stringify({ name, prog, [name]: window[name] })))
-            .catch(error => argh(JSON.stringify({ name, error, [name]: window[name] })));
-        };
-        script.onerror = () => argh(JSON.stringify({
-          name,
-          error: `failed to load ${filename}`,
-          [name]: window[name],
-        }));
-        Body.appendChild(script);
-      });
-    },
-    loadPrograms: function(names) {
-      return names.reduce((acc, { name }) => acc.then(result => {
-        if (result) l(JSON.parse(result));
-        return this.loadProgram(name);
-      }), Promise.resolve());
-    },
+    // loadProgram: function(name) {
+    //   let filename = `${V}/${name}.js`;
+    //   l('loading program', filename);
+    //   return new Promise((ok, argh) => {
+    //     let script = document.createElement('script');
+    //     script.src = filename;
+    //     script.onload = _onLoadCallback(name, ok, argh, 'init');
+    //     script.onerror = _onErrorCallback(name, argh);
+    //     Body.appendChild(script);
+    //   });
+    // },
+    // loadPrograms: function(names) {
+    //   return names.reduce((acc, { name }) => acc.then(result => {
+    //     if (result) l(JSON.parse(result));
+    //     return this.loadProgram(name);
+    //   }), Promise.resolve());
+    // },
 
-    loadScript: function(name) {
-      let filename = `${V}/${name.toLowerCase()}.js`;
-      l('loading script', filename);
-      return new Promise((ok, argh) => {
-        let script = document.createElement('script');
-        script.src = filename;
-        script.onload = () => {
-          return window[name].load()
-            .then(() => ok(JSON.stringify({ name, [name]: window[name] })))
-            .catch(error => argh(JSON.stringify({ name, error, [name]: window[name] })));
-        };
-        script.onerror = () => argh(JSON.stringify({
-          name,
-          error: `failed to load ${filename}`,
-          [name]: window[name],
-        }));
-        Body.appendChild(script);
-      });
-    },
-    loadScripts: function(names) {
-      return names.reduce((acc, name) => acc.then(result => {
-        if (result) l(JSON.parse(result));
-        return this.loadScript(name);
-      }), Promise.resolve());
-    },
+    // loadScript: function(name, cb) {
+    //   let filename = `${V}/${name.toLowerCase()}.js`;
+    //   l('loading script', filename);
+    //   return new Promise((ok, argh) => {
+    //     let script = document.createElement('script');
+    //     script.src = filename;
+    //     script.onload = _onLoadCallback(name, ok, argh, cb);
+    //     script.onerror = _onErrorCallback(name, argh);
+    //     Body.appendChild(script);
+    //   });
+    // },
+    // loadScripts: function(names) {
+    //   return names.reduce((acc, name) => acc.then(result => {
+    //     if (result) l(JSON.parse(result));
+    //     return this.loadScript(name);
+    //   }), Promise.resolve());
+    // },
   };
+
+  // function _onErrorCallback(name, argh) {
+  //   return () => argh(JSON.stringify({
+  //     name,
+  //     error: `failed to load ${name}`,
+  //     [name]: window[name],
+  //   }));
+  // }
+
+  // function _onLoadCallback(name, ok, argh, callback) {
+  //   return () => window[name][callback]()
+  //     .then(() => ok(JSON.stringify({
+  //       name,
+  //       [name]: window[name],
+  //     })))
+  //     .catch(error => argh(JSON.stringify({
+  //       name,
+  //       error,
+  //       [name]: window[name],
+  //     })));
+  // }
 })();
 
 var COORDS = {
