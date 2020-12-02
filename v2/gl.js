@@ -95,7 +95,7 @@ var GL = (() => {
         _glCtx.vertexAttribPointer(attr, numComponents, glType, normalize, stride, offset);
       } else {
         e(`_glCtx.${type} does not exist.`);
-      }        
+      }
     },
 
     setUniform: function(type, loc, matrix, transpose = false) {

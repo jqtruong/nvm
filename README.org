@@ -8,6 +8,52 @@
 
 * WebGL
 
+** [2020-07-09 Thu]
+   alright, time to make something shiny! in v3!
+   
+   after reviewing the code, and made some slight changes,
+   i'm ready to work on it. the main deal is to make shiny
+   spinning windows.
+
+   but first, let's look at a program, eg. =[[file:v3/programs/sine-wave.js][sine-wave]]=. It
+   takes an array of parameters:
+   #+BEGIN_SRC js
+     {
+       ...
+       params: [
+         ['POINTS'   , 0, 1, -.45],
+         ['POINTS'   , 0, 1,  .45],
+         ['TRIANGLES', 0, 3, -.25],  // just one of these
+         ['TRIANGLES', 0, 3,  .25],
+       ],
+       ...
+     }
+   #+END_SRC
+   that is used in the =render(params)= function. The latter
+   does whatever it wants with them, which is fine for
+   now. The function can be multiple times, given the number
+   of param-arrays in the =params= [[file:v3/Programs.js::params:%20%5B][attribute]].
+
+   I've copied =sine-wave= from v2's =[[file:v2/programs/drawing-modes.js][drawing-modes.js]]=¹. I
+   need to update it, along with the params, to create
+   different sine waves. I think i thought of this to learn
+   more about the animation using trigonometry for the
+   spinning windows. Anyways, would be cool to have the sine
+   waves ondulate at different frequencies - and whatnot -
+   with different colors.
+
+   editing the [[file:v3/shaders/default-vrt.c::gl_Position%20=%20aPosition;][vertex]] is my first move, but what is
+   =aPosition= again? It's used as the [[file:v2/programs/drawing-modes.js::window%5B'GL'%5D.sendVertices(null,%20buffer,%20'aPosition');][bridge]] to send the
+   vertices via the buffer.
+   
+   i think i'm aiming too high; let's start with a straight
+   line, tomorrow.
+
+*** Footnotes
+    1. In =[[file:v2/programs/drawing-modes.js][drawing-modes.js]]=, =update()= always creates an
+       array of 3 vertices, but only =[[file:v2/programs/drawing-modes.js::window%5B'GL'%5D.drawArrays(mode,%20first,%20count);][count]]= is used.
+
+
 ** [2019-12-03 Tue]
    v3 begins. the modularized programs seem to have some
    parts in common. seems =update()= is the only difference,
@@ -161,7 +207,7 @@
     - setup attributes for the thing you want to draw
     - for each attribute call (see [[file:v2/gl.js::sendVertices:%20function%20(opts,%20buffer,%20attr)%20{][=sendVertices=]]):
       - =gl.enableVertexAttribArray= :: the attribute name
-           that will receive the data
+           that will receive the data in the shader
       - =gl.bindBuffer= :: sets =buffer= as the web GL
            context's =ARRAY_BUFFER= to pass the data to the
            attribute
@@ -175,7 +221,7 @@
     - call =gl.drawArrays= or =gl.drawElements= (to test the
       latter)
 
-    `drawArrays` needs to run last because it is the
+    =drawArrays= needs to run last because it is the
     bridging function that to connect the two sides, the
     data and the buffer to the shader program, after
     they're set.
@@ -233,7 +279,19 @@
 
 *** DONE Start with rotating colorful rectangles.
 
+
 *** TODO animate a sine wave
+
+**** [2019-12-15 Sun]
+     i think i need to draw points first, then lines
+     connecting them, then animate the points. Horizontal
+     from -1 to 1, and:
+     - amplitude (A): .25 (y)
+     - frequency (w): 1 (one cycle to start with)
+     - period (t?): 2 seconds (so it goes up from -1 to -.5
+       and .5 to 1, and down from -.5 to .5)
+
+     formula is: A × sin(wt)
 
 
 ** DONE draw multiple things

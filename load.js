@@ -11,7 +11,7 @@ const SCRIPTS = [
   'GL'       ,
   'Matrix'   ,
   'Programs' ,
-  'Frame'    , 
+  'Frame'    ,
   'Events'   ,
   'Game'     ,
 ];
@@ -24,28 +24,51 @@ window.onload = (e) => {
 
   // Load JS and CSS
   Load.scripts(SCRIPTS, 'load')
-    .then(() => Helper.loadCss('index'))
+    .then(() => Load.css('index'))
     .then(() => window['Game'].start())
-    .catch(err => l('Game could not start due to', JSON.parse(err)));
+    .catch(err => l('Game could not start due to', err));
 };
 
 var Load = (() => {
 
   return {
+    css: function(name) {
+      return new Promise((ok, argh) => {
+        let link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.type = 'text/css';
+        link.href = `${V}/${name}.css`;
+        link.onload = () => ok(true);
+
+        Head.appendChild(link);
+      })
+    },
     scripts: function (names, callback) {
-      return names.reduce((acc, name) => acc.then(result => {
-        if (result) l(JSON.parse(result));
-        return _loadScript(name, callback);
+      return names.reduce((acc, name, i) => acc.then(result => {
+        if (result) l(`#${i}:`, JSON.parse(result));
+        return _appendScript(name, callback);
       }), Promise.resolve());
     },
   };
+
+  function _appendScript(name, callback) {
+    let filename = `${V}/${name}.js`;
+    l('loading script', filename);
+    return new Promise((ok, argh) => {
+      let script = document.createElement('script');
+      script.src = filename;
+      script.onload = _onScriptLoad(name, ok, argh, callback);
+      script.onerror = _onScriptError(name, argh);
+      Body.appendChild(script);
+    });
+  }
 
   function _createScript(filename) {
     return new Promise((ok, argh) => {
       let script = document.createElement('script');
       script.src = filename;
-      script.onload = _onLoadCallback(name, ok, argh, cb);
-      script.onerror = _onErrorCallback(name, argh);
+      script.onload = _onScriptLoad(name, ok, argh, cb);
+      script.onerror = _onScriptError(name, argh);
     });
   }
 
@@ -54,19 +77,7 @@ var Load = (() => {
     return filename;
   }
 
-  function _loadScript(name, callback) {
-    let filename = `${V}/${name}.js`;
-    l('loading script', filename);
-    return new Promise((ok, argh) => {
-      let script = document.createElement('script');
-      script.src = filename;
-      script.onload = _onLoadCallback(name, ok, argh, callback);
-      script.onerror = _onErrorCallback(name, argh);
-      Body.appendChild(script);
-    });
-  }
-
-  function _onErrorCallback(name, argh) {
+  function _onScriptError(name, argh) {
     return () => argh(JSON.stringify({
       name,
       error: `failed to load ${name}`,
@@ -74,7 +85,7 @@ var Load = (() => {
     }));
   }
 
-  function _onLoadCallback(name, ok, argh, callback) {
+  function _onScriptLoad(name, ok, argh, callback) {
     return () => {
       let obj = {
         name,
@@ -97,75 +108,8 @@ var Helper = (function() {
     getById: function(id) { return DOM.getElementById(id) },
     get1ByTag: function(name) { return DOM.getElementsByTagName(name)[0] },
     getAllByTag: function(name) { return DOM.getElementsByTagName(name) },
-    loadCss: function(name) {
-      return new Promise((ok, argh) => {
-        let link = document.createElement('link');
-        link.rel = 'stylesheet';
-        link.type = 'text/css';
-        link.href = `${V}/${name}.css`;
-        link.onload = () => ok(true);
-
-        Head.appendChild(link);
-      })
-    },
-
-    // loadProgram: function(name) {
-    //   let filename = `${V}/${name}.js`;
-    //   l('loading program', filename);
-    //   return new Promise((ok, argh) => {
-    //     let script = document.createElement('script');
-    //     script.src = filename;
-    //     script.onload = _onLoadCallback(name, ok, argh, 'init');
-    //     script.onerror = _onErrorCallback(name, argh);
-    //     Body.appendChild(script);
-    //   });
-    // },
-    // loadPrograms: function(names) {
-    //   return names.reduce((acc, { name }) => acc.then(result => {
-    //     if (result) l(JSON.parse(result));
-    //     return this.loadProgram(name);
-    //   }), Promise.resolve());
-    // },
-
-    // loadScript: function(name, cb) {
-    //   let filename = `${V}/${name.toLowerCase()}.js`;
-    //   l('loading script', filename);
-    //   return new Promise((ok, argh) => {
-    //     let script = document.createElement('script');
-    //     script.src = filename;
-    //     script.onload = _onLoadCallback(name, ok, argh, cb);
-    //     script.onerror = _onErrorCallback(name, argh);
-    //     Body.appendChild(script);
-    //   });
-    // },
-    // loadScripts: function(names) {
-    //   return names.reduce((acc, name) => acc.then(result => {
-    //     if (result) l(JSON.parse(result));
-    //     return this.loadScript(name);
-    //   }), Promise.resolve());
-    // },
   };
 
-  // function _onErrorCallback(name, argh) {
-  //   return () => argh(JSON.stringify({
-  //     name,
-  //     error: `failed to load ${name}`,
-  //     [name]: window[name],
-  //   }));
-  // }
-
-  // function _onLoadCallback(name, ok, argh, callback) {
-  //   return () => window[name][callback]()
-  //     .then(() => ok(JSON.stringify({
-  //       name,
-  //       [name]: window[name],
-  //     })))
-  //     .catch(error => argh(JSON.stringify({
-  //       name,
-  //       error,
-  //       [name]: window[name],
-  //     })));
-  // }
 })();
 
 var COORDS = {
@@ -215,7 +159,7 @@ Math.interpolate = function (options) {
 
   let { input,
         output,
-        steps } = Object.assign(defaults, options);
+        steps } = { ...defaults, ...options };
 
   let deltas = { input:  delta(input),
                  output: delta(output) };
@@ -227,7 +171,7 @@ Math.interpolate = function (options) {
   let step = deltas.input/steps;
 
   let values = [];
-  for (i=0; i<=deltas.input; i+=step) {
+  for (let i=0; i<=deltas.input; i+=step) {
     values.push(output[0] + (i*ratio));
   }
 

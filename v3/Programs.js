@@ -1,6 +1,8 @@
 const PROGRAMS = [{
   name: 'programs/sine-wave',
-  params: [],
+  params: [
+    ['POINTS'   , 0, 1, -.45],
+  ],
 }];
 
 var Programs = (() => {

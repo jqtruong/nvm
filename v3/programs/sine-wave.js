@@ -3,6 +3,7 @@ window['programs/sine-wave'] = (() => {
   var _program = null;
   var _lim = 10000;
   var _interpolation = Math.interpolate({ input:  [0, _lim] });
+  l(_interpolation);
 
   return {
     init: function() {

@@ -112,6 +112,8 @@ var GL = (() => {
       var frgFile = `${V}/shaders/${frg}-frg.c`;
       var program = _glCtx.createProgram();
 
+      l('Loading program', { vrtFile, frgFile });
+
       return compileShader(_glCtx.VERTEX_SHADER, vrtFile)
         .then(shader => attachVertexShader(shader, program))
         .then(() => compileShader(_glCtx.FRAGMENT_SHADER, frgFile))
