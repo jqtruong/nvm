@@ -9,6 +9,7 @@ window['programs/sine-wave'] = (() => {
     init: function() {
       return window['GL'].setupProgram().then(finishInit);
     },
+
     render: function(params) {
       let [mode, first, count, x = 0] = params;
       update(x);
@@ -25,11 +26,11 @@ window['programs/sine-wave'] = (() => {
   function update(x) {
     _ms += Game.msPassed;
     if (_ms >= _lim) _ms = 0;
-    var y = _interpolation[Math.floor(_ms)];
-    var vertices = `     ${x} ${y + .1}
-                    ${x - .1}      ${y}
-                    ${x + .1}      ${y}`.toFloat32Array();
-    var buffer = window['GL'].createBuffer(vertices);
+    let y = _interpolation[Math.floor(_ms)];
+    let freq = 20, amp = .1;
+    let sx = x + Math.sin((y*freq) * Math.PI) * amp;
+    let vertices = `${sx} ${y}`.toFloat32Array();
+    let buffer = window['GL'].createBuffer(vertices);
     window['GL'].sendVertices(null, buffer, 'aPosition');
   }
 })();

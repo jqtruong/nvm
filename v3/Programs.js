@@ -15,6 +15,7 @@ var Programs = (() => {
   ////////////////////////////////////////////////////////////////////////////////
 
   function load() {
+    l({PROGRAMS});
     const programs = PROGRAMS.map(({ name }) => name);
     return window['Load'].scripts(programs, 'init');
   }

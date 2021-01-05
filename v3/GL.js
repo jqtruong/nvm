@@ -117,11 +117,11 @@ var GL = (() => {
       return compileShader(_glCtx.VERTEX_SHADER, vrtFile)
         .then(shader => attachVertexShader(shader, program))
         .then(() => compileShader(_glCtx.FRAGMENT_SHADER, frgFile))
-        .then(shader => attachFragmentShader(shader, program));
+        .then(shader => attachFragmentShaderEtc(shader, program));
     },
   };
 
-  function attachFragmentShader(frgShader, program) {
+  function attachFragmentShaderEtc(frgShader, program) {
     var status = (() => {
       _glCtx.attachShader(program, frgShader);
       _glCtx.linkProgram(program);

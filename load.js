@@ -151,28 +151,33 @@ Float32Array.prototype.col = function (c) {
 //////////
 
 Math.interpolate = function (options) {
+  const NONE_THE_STEPS = 0;
+
   let defaults = {
-    input  : [ 0, 0],
-    output : [-1, 1],
-    steps  : null,
+    input  : [ 0, 0] ,
+    output : [-1, 1] ,
+    steps  : null    ,
   };
 
-  let { input,
-        output,
-        steps } = { ...defaults, ...options };
+  let { input  ,
+        output ,
+        steps  } = { ...defaults, ...options };
 
-  let deltas = { input:  delta(input),
-                 output: delta(output) };
+  let deltas = { input  : delta(input)  ,
+                 output : delta(output) };
 
   let ratio = deltas.output/deltas.input;
+  let precision = calcPrecision();
 
   if (!steps) steps = deltas.input;
-  if (!steps) return [];        // if input range is 0
+  if (steps == NONE_THE_STEPS) return [];
   let step = deltas.input/steps;
 
   let values = [];
+  let value = 0;
   for (let i=0; i<=deltas.input; i+=step) {
-    values.push(output[0] + (i*ratio));
+    value = output[0] + (i*ratio);
+    values.push(value.toFixed(precision));
   }
 
   return values;
@@ -181,6 +186,10 @@ Math.interpolate = function (options) {
 
   function delta([low, high]) {
     return Math.abs(low - high);
+  }
+
+  function calcPrecision() {
+    return Math.floor(Math.log(deltas.input) / Math.log(10));
   }
 };
 
