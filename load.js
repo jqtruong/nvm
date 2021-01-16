@@ -17,10 +17,10 @@ const SCRIPTS = [
 ];
 
 window.onload = (e) => {
-  N = new URLSearchParams(location.search).get('v') || 1;
+  N = new URLSearchParams(location.search).get('v') || 3; /* it no work with version 1 anymore :( */
   V = `v${N}`;
   DEBUG = !!(new URLSearchParams(location.search).get('d'));
-  l('debug', DEBUG);
+  l('DEBUG is', DEBUG ? 'on' : 'false');
 
   // Load JS and CSS
   Load.scripts(SCRIPTS, 'load')
