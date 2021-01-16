@@ -8,7 +8,12 @@ var GL = (() => {
     vertexPointer: {
       numComponents: 2,
       type: 'FLOAT',
+
+      /* normalize into range when cast into float; haven't seen an
+      example yet of how that works. */
       normalize: false,
+
+      /* stride and offset seem useful when working with BYTEs. */
       stride: 0,
       offset: 0,
     }
