@@ -188,7 +188,9 @@ Math.interpolate = function (options) {
     return Math.abs(low - high);
   }
 
+  /* Returns log base 10 of the input delta, which is essentially the number of 0s the delta has, eg. 1,000,000 => 6. */
   function calcPrecision() {
+    /* Math.log(Math.E) == 1 */
     return Math.floor(Math.log(deltas.input) / Math.log(10));
   }
 };
@@ -200,4 +202,3 @@ String.prototype.toFloat32Array = function() {
   const a = this.trim().replace(/[\n ]+/g, ' ').split(' ');
   return new Float32Array(a);
 };
-
