@@ -1,7 +1,7 @@
 var Game = (() => {
   let _id = 0;                  // request frame id
   let _loads = [];
-  let _looper = () => l('you should be spinning me right round, but youre not...');
+  let _looper = () => l("i am not a loop");
   let _msPassed = 0;
   let _lastMs   = 0;
 
