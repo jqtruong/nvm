@@ -9,7 +9,11 @@ const PROGRAMS = [
   {
     name: 'programs/lines',
     params: [
-      [-.5],
+      [-1.0],
+      [-0.5],
+      [ 0.0],
+      [ 0.5],
+      [ 1.0]
     ],
   },
 ];

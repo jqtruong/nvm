@@ -1,7 +1,7 @@
 var Head = document.getElementsByTagName('head')[0];
 var Body = document.body;
 var DEBUG = false;
-var l = (...msgs) => { if (DEBUG) console.log(...msgs); }
+var l = (...msgs) => DEBUG && console.log(...msgs);
 var e = console.error;
 var N = 0;
 var V = '';

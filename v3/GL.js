@@ -51,7 +51,7 @@ var GL = (() => {
             resolve();
           }
           else {
-            reject('Gl did not initiate properly.');
+            reject('GL did not initialize properly.');
           }
         }
       });
@@ -61,6 +61,8 @@ var GL = (() => {
       _glCtx.viewport(0, 0, window['Canvas'].width, window['Canvas'].height);
       _glCtx.clearColor(0.0, 0.0, 0.0, 1.0); // Clear to black, fully opaque
       _glCtx.clearDepth(1.0);                // Clear everything
+      _glCtx.blendFunc(_glCtx.SRC_ALPHA, _glCtx.ONE);
+      _glCtx.enable(_glCtx.BLEND);
       _glCtx.enable(_glCtx.DEPTH_TEST);      // Enable depth testing
       _glCtx.depthFunc(_glCtx.LEQUAL);       // Near things obscure
       _glCtx.clear(_glCtx.COLOR_BUFFER_BIT | _glCtx.DEPTH_BUFFER_BIT);
@@ -91,7 +93,10 @@ var GL = (() => {
             type,
             normalize,
             stride,
-            offset } = Object.assign({}, defaults.vertexPointer, opts);
+            offset } = {
+              ...defaults.vertexPointer,
+              ...opts
+            };
 
       var glType = _glCtx[type];
       if (VARIANTS.TYPES.includes(type) && glType) {
@@ -103,12 +108,12 @@ var GL = (() => {
       }        
     },
 
-    setUniform: function(type, loc, matrix, transpose = false) {
-      var glFun = _glCtx[`uniformMatrix${type}`].bind(_glCtx);
-      if (glFun) {
-        glFun(loc, transpose, matrix);
+    setUniform: function(ender, loc, ...args) {
+      var glFunc = _glCtx[`uniform${ender}`];
+      if (glFunc) {
+        glFunc.apply(_glCtx, [loc, ...args]);
       } else {
-        e(`_glCtx.uniformMatrix${type}() does not exist.`);
+        e(`${glFunc}() does not exist.`);
       }
     },
 
