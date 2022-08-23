@@ -10,7 +10,7 @@
 
 ** [2020-07-09 Thu]
    alright, time to make something shiny! in v3!
-   
+
    after reviewing the code, and made some slight changes,
    i'm ready to work on it. the main deal is to make shiny
    spinning windows.
@@ -45,7 +45,7 @@
    editing the [[file:v3/shaders/default-vrt.c::gl_Position%20=%20aPosition;][vertex]] is my first move, but what is
    =aPosition= again? It's used as the [[file:v2/programs/drawing-modes.js::window%5B'GL'%5D.sendVertices(null,%20buffer,%20'aPosition');][bridge]] to send the
    vertices via the buffer.
-   
+
    i think i'm aiming too high; let's start with a straight
    line, tomorrow.
 
@@ -118,7 +118,7 @@
    the previous node, but the previous two nodes for a
    triangle. (see tutorial 25 to play with the different
    draw styles.) #27 loops through 360° and draws super thin
-   triangles. 
+   triangles.
 
 
 ** [2018-04-13 Fri]
@@ -163,7 +163,7 @@
 
    i need to move =gl= functions into its own
    library. keeping the context in =Canvas= is more
-   typing... 
+   typing...
 
    then add a rotation to the rectangle.
 
@@ -178,8 +178,8 @@
 
 ** [2017-12-25 Mon]
    looks like there will be many programs for each thing i
-   want to draw. 
-   
+   want to draw.
+
    WebGL pipeline (high-level):
    1. Runs the vertex shader on all of the vertices to work
       out where everything is.
@@ -245,7 +245,7 @@
 *** Dimension rule
     3x3 ⋅ 3x1 = 3x1
     AxB ⋅ CxD = AxD as long as B == C
-   
+
 
 * Refs
   - http://nullprogram.com/sphere-js/
@@ -265,7 +265,7 @@
              "/nvm/" "~/work/gamedev/passed-in-future/nvm/")
             hunchentoot:*dispatch-table*)
     #+END_SRC
-    
+
     then visit http://localhost:4242/nvm/index.html.
 
 
