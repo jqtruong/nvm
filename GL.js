@@ -1,3 +1,12 @@
+
+var POINTS = 'POINTS';
+var LINE_STRIP = 'LINE_STRIP';
+var LINE_LOOP = 'LINE_LOOP';
+var LINES = 'LINES';
+var TRIANGLE_STRIP = 'TRIANGLE_STRIP';
+var TRIANGLE_FAN = 'TRIANGLE_FAN';
+var TRIANGLES = 'TRIANGLES';
+
 var GL = (() => {
 
   var _glCtx = null;
@@ -20,15 +29,6 @@ var GL = (() => {
   };
 
   var VARIANTS = {
-    DRAW_MODES: [
-      'POINTS',
-      'LINE_STRIP',
-      'LINE_LOOP',
-      'LINES',
-      'TRIANGLE_STRIP',
-      'TRIANGLE_FAN',
-      'TRIANGLES'
-    ],
     TYPES: [
       'BYTE',
       'SHORT',
@@ -75,17 +75,8 @@ var GL = (() => {
       return buffer;
     },
 
-    getAttrib:  null,
-    getUniform: null,
-    useProgram: null,
-
-    drawArrays: function(mode, offset, count) {
-      var glMode = _glCtx[mode];
-      if (VARIANTS.DRAW_MODES.includes(mode)) {
-        _glCtx.drawArrays(glMode, offset, count);
-      } else {
-        e(`_glCtx.${mode} does not exist.`);
-      }
+    drawArrays: function(mode, offset, num_verts) {
+      return _glCtx.drawArrays(_glCtx[mode], offset, num_verts);
     },
 
     sendVertices: function (opts, buffer, attr) {
@@ -105,7 +96,7 @@ var GL = (() => {
         _glCtx.vertexAttribPointer(attr, numComponents, glType, normalize, stride, offset);
       } else {
         e(`_glCtx.${type} does not exist.`);
-      }        
+      }
     },
 
     setUniform: function(ender, loc, ...args) {
@@ -118,8 +109,8 @@ var GL = (() => {
     },
 
     setupProgram: function (vrt = 'default', frg = 'default') {
-      var vrtFile = `${V}/shaders/${vrt}-vrt.c`;
-      var frgFile = `${V}/shaders/${frg}-frg.c`;
+      var vrtFile = `shaders/${vrt}-vrt.c`;
+      var frgFile = `shaders/${frg}-frg.c`;
       var program = _glCtx.createProgram();
 
       l('Loading program', { vrtFile, frgFile });
@@ -129,6 +120,10 @@ var GL = (() => {
         .then(() => compileShader(_glCtx.FRAGMENT_SHADER, frgFile))
         .then(shader => attachFragmentShaderEtc(shader, program));
     },
+
+    getAttrib:  null,
+    getUniform: null,
+    useProgram: null,
   };
 
   function attachFragmentShaderEtc(frgShader, program) {

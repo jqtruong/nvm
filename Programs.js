@@ -1,21 +1,7 @@
 const PROGRAMS = [
-  {
-    name: 'programs/sine-wave',
-    params: [
-      ['POINTS', 0, 1, -.5],
-      ['POINTS', 0, 1,  .5],
-    ],
-  },
-  {
-    name: 'programs/lines',
-    params: [
-      [-1.0],
-      [-0.5],
-      [ 0.0],
-      [ 0.5],
-      [ 1.0]
-    ],
-  },
+    {
+      name: 'programs/graph',
+    },
 ];
 
 var Programs = (() => {
@@ -34,15 +20,20 @@ var Programs = (() => {
   }
 
   function run() {
-    PROGRAMS.forEach(_runProgramWithParams);
+    PROGRAMS.forEach(_runProgram);
   }
 
   /*
    * Call program-by-name's render with associated params, pertaining to a GL draw
    * mode.
    */
-  function _runProgramWithParams({ name, params }) {
-    return params.forEach(prg => window[name].render.call(null, prg));
+  function _runProgram({ name, params }) {
+    if (params) {
+      return params.forEach(data => window[name].render.call(null, data));
+    }
+    else {
+      return window[name].render();
+    }
   }
 
   /* Returns array of program names. */
