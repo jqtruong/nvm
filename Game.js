@@ -41,7 +41,7 @@ var Game = (() => {
     msPassed: 0,
 
     start: function() {
-      l(`Game ${V}...`);
+      l('Game starting');
       setLoop(window['Frame'].next);
       this.loop(0);
     },

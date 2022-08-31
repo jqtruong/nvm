@@ -67,45 +67,33 @@ Math.interpolate = function (options) {
         translateRatio,
     } = { ...defaults, ...options };
 
-    let deltas = {
-        input: _delta(input),
-        output: _delta(output)
-    };
+    let [inFrom, inTo, outFrom, outTo] = input.concat(output);
+    let steps = (inTo - inFrom)/step;
 
-    if (deltas.input == 0) return [];
     if (!precision) precision = _estimatePrecision();
 
     if (!translateRatio) {
-        if (deltas.input >= 1) {
-            translateRatio = deltas.output/deltas.input;
-        }
-        else {
-            translateRatio = 1; // TODO next
-        }
-    }
-    let value = 0;
-    let values = [];
-
-    for (var i=0; i<=deltas.input; i+=step) {
-        value = output[0] + (i*translateRatio);
-        values.push(value.toFixed(precision));
+        translateRatio = (outTo - outFrom)/steps;
     }
 
-    return values;
+    let interpolatedValues = [];
+    for (i=inFrom; i<inTo; i+=step) {
+        let iv = (outFrom + (i / step) * translateRatio).toFixed(precision);
+        interpolatedValues.push(iv);
+    }
+
+    return interpolatedValues;
 
     ////
-
-    function _delta([low, high]) {
-        return Math.abs(low - high);
-    }
 
     /**
      * Returns log base 10 of the input delta, which is essentially the number of
      * 0s the delta has, eg. 1,000,000 => 6.
+     *
+     * FYI, Math.log(Math.E) == 1
      **/
     function _estimatePrecision() {
-        /* Math.log(Math.E) == 1 */
-        return Math.floor(Math.log(deltas.input) / Math.log(10));
+        return Math.floor(Math.log(steps) / Math.log(10));
     }
 };
 

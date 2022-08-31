@@ -6,6 +6,7 @@ var l = (...msgs) => DEBUG && console.log(...msgs);
 const SCRIPTS = [
     'Canvas',
     'GL',
+    // TODO remove next
     'Matrix',
     'Programs',
     'Frame',
@@ -32,9 +33,11 @@ var Load = (() => {
                 let link = document.createElement('link');
                 link.rel = 'stylesheet';
                 link.type = 'text/css';
-                link.href = `${V}/${name}.css`;
+                link.href = `${name}.css`;
+                // link.href = `${V}/${name}.css`;
                 link.onload = () => ok(true);
 
+                // l('CSS
                 Head.appendChild(link);
             })
         },
@@ -84,12 +87,17 @@ var Load = (() => {
     function _onScriptLoad(name, ok, argh, callback) {
         return () => {
             if (callback) {
-                window[name][callback]()
-                    .then(() => ok({ name }))
-                    .catch(e => argh(e));
+                if (!window[name]) {
+                    argh(`window[${name}] is not set`);
+                }
+                else {
+                    window[name][callback]()
+                        .then(() => ok({ name }))
+                        .catch(e => argh(e));
+                }
             }
             else {
-                ok(JSON.stringify({ name }));
+                ok({ name });
             }
         };
     }
