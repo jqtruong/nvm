@@ -6,8 +6,6 @@ var l = (...msgs) => DEBUG && console.log(...msgs);
 const SCRIPTS = [
     'Canvas',
     'GL',
-    // TODO remove next
-    'Matrix',
     'Programs',
     'Frame',
     'Events',
