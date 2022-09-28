@@ -10,9 +10,28 @@ var Helper = (function() {
 
 })();
 
+
+///////////
+// Array //
+///////////
+
+Array.prototype.toRgba = function() {
+    console.log('this is', this);
+    return {
+        r: this[0],
+        g: this[1],
+        b: this[2],
+        a: this[3] ?? 1.0,
+    };
+}
+
+
 //////////////////
 // Float32Array //
 //////////////////
+
+// TODO (when updating matrix) decide on whether prototyping vs adding to
+// Matrix, but the latter needs an update
 
 Float32Array.prototype.coords = {
     'x0':  0, 'y0':  1, 'z0':  2, 'w0':  3,
@@ -44,62 +63,67 @@ Float32Array.prototype.col = function (c) {
     ];
 };
 
-var MATRIX = Float32Array;
 
 //////////
 // Math //
 //////////
 
-Math.interpolate = function (options) {
-    let defaults = {
-        input: [0, Math.PI],
-        output: [-1 , 1],
-        precision: null,
-        step: Math.PI/180,
-        translateRatio: null,
-    };
+/**
+ * Returns log base 10 of the input delta, which is essentially the number of
+ * 0s the delta has, eg. 1,000,000 => 6.
+ *
+ * FYI, Math.log(Math.E) == 1
+ **/
+Math.estimatePrecision = (number) => Math.floor(Math.log(steps) / Math.log(10));
 
-    let {
-        input,
-        output,
-        precision,
-        step,
-        translateRatio,
-    } = { ...defaults, ...options };
+Math.interpolate = {
+    range: (options) => {
+        let defaults = {
+            input: [0, Math.PI],
+            output: [-1 , 1],
+            precision: null,
+            step: Math.PI/180,
+            translateRatio: null,
+        };
 
-    let [inFrom, inTo, outFrom, outTo] = input.concat(output);
-    let steps = (inTo - inFrom)/step;
+        let {
+            input,
+            output,
+            precision,
+            step,
+            translateRatio,
+        } = { ...defaults, ...options };
 
-    if (!precision) precision = _estimatePrecision();
+        let [inFrom, inTo, outFrom, outTo] = input.concat(output);
+        let steps = (inTo - inFrom) / step;
 
-    if (!translateRatio) {
-        translateRatio = (outTo - outFrom)/steps;
-    }
+        if (!precision) precision = Math.estimatePrecision(steps);
 
-    let interpolatedValues = [];
-    for (i=inFrom; i<inTo; i+=step) {
-        let iv = (outFrom + (i / step) * translateRatio).toFixed(precision);
-        interpolatedValues.push(iv);
-    }
+        if (!translateRatio) {
+            translateRatio = (outTo - outFrom) / steps;
+        }
 
-    return interpolatedValues;
+        let interpolatedValues = [];
+        while (inFrom < inTo) {
+            let iv = outFrom + inFrom / step / translateRatio;
+            interpolatedValues.push(iv.toFixed(precision));
+            inFrom += step;
+        }
 
-    ////
+        return interpolatedValues;
+    },
 
-    /**
-     * Returns log base 10 of the input delta, which is essentially the number of
-     * 0s the delta has, eg. 1,000,000 => 6.
-     *
-     * FYI, Math.log(Math.E) == 1
-     **/
-    function _estimatePrecision() {
-        return Math.floor(Math.log(steps) / Math.log(10));
-    }
+    // Given a range of inputs, an input value, a range of outputs, find the
+    // output value.
+    //
+    value: ({ offset, i, ratio }) => offset + i * ratio,
 };
+
 
 ////////////
 // String //
 ////////////
+
 String.prototype.toFloat32Array = function() {
     const a = this.trim().replace(/[\n ]+/g, ' ').split(' ');
     return new Float32Array(a);

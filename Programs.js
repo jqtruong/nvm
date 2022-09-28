@@ -1,20 +1,31 @@
-const PROGRAMS = [
-    {
-        name: 'programs/channel',
-        params: [
-            {
-                color: [1, .4, .2, .1],
-                vertices: null,
-            },
-            {
-                color: [.2, .4, 1, .1],
-                vertices: null,
-            },
-        ],
-    },
-];
-
 var Programs = (() => {
+
+    var color1 = [1, .4, .2, .1].toRgba();
+    var color2 = [.2, .4, 1, .1].toRgba();
+
+    var PROGRAMS = [
+        {
+            name: 'programs/channel',
+            params: [
+                {
+                    color: color1,
+                    vertices: null,
+                },
+                {
+                    color: color2,
+                    vertices: null,
+                },
+                {
+                    color: color1,
+                    vertices: null,
+                },
+                {
+                    color: color2,
+                    vertices: null,
+                },
+            ],
+        },
+    ];
 
     return {
         load,
@@ -27,7 +38,9 @@ var Programs = (() => {
         l({PROGRAMS});
         const programs = _programNames();
         return Load.json('adele')
-            .then(_parseJson)
+            .then(json => _parseJson(json, [0, 1]))
+            .then(() => Load.json('agad'))
+            .then(json => _parseJson(json, [2, 3]))
             .then(() => window['Load'].scripts(programs, 'init'));
     }
 
@@ -48,36 +61,25 @@ var Programs = (() => {
         }
     }
 
-    function _parseJson(json) {
+    function _parseJson(json, paramIds) {
         if (!json) return Promise.reject('no json');
 
-        if (json.channels) _channels = json.channels;
-        if (json.dat) _dat = json.dat;
-        if (json.duration) _duration = json.duration;
-        if (json.rate) _rate = json.rate;
-
-        var options = {
-            input: [0, _duration],
+        var frames = Math.interpolate.range({
+            input: [0, json.duration],
             output:[1, -1],
-            step: 1/_rate,
-        }
-        _frames = Math.interpolate(options);
-
-        var ch1Verts = '';
-        var ch2Verts = '';
-
-        _frames.forEach((frame, i) => {
-            var [_, ch1, ch2] = _dat[i];
-            ch1Verts += `     0 ${frame}
-                         ${ch1} ${frame}`;
-            ch2Verts += `     0 ${frame}
-                         ${ch2} ${frame}`;
+            step: 1/json.rate,
         });
 
-        PROGRAMS[0].params[0].vertices = ch1Verts.toFloat32Array();
-        PROGRAMS[0].params[1].vertices = ch2Verts.toFloat32Array();
+        l(Math.interpolate.value({
+            offset: -1,
+            i: 1,
+            ratio: 1,
+        });
 
-        return Promise.resolve();
+        // PROGRAMS[0].params[paramIds[0]].vertices =
+        // PROGRAMS[0].params[paramIds[1]].vertices =
+
+        return Promise.resolve('testing');
     }
 
     /* Returns array of program names. */

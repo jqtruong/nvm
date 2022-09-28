@@ -16,7 +16,7 @@ window[`programs/channel`] = (() => {
             window['GL'].setUniform(
                 '4f',
                 _uColor,
-                color[0], color[1], color[2], color[3]
+                color.r, color.g, color.b, color.a
             );
             window['GL'].drawArrays(LINES, 0, _frames.length * _VPF);
         },
