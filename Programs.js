@@ -74,7 +74,7 @@ var Programs = (() => {
             offset: -1,
             i: 1,
             ratio: 1,
-        });
+        }));
 
         // PROGRAMS[0].params[paramIds[0]].vertices =
         // PROGRAMS[0].params[paramIds[1]].vertices =

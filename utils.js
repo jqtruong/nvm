@@ -74,7 +74,7 @@ Float32Array.prototype.col = function (c) {
  *
  * FYI, Math.log(Math.E) == 1
  **/
-Math.estimatePrecision = (number) => Math.floor(Math.log(steps) / Math.log(10));
+Math.estimatePrecision = (num) => Math.floor(Math.log(num) / Math.log(10));
 
 Math.interpolate = {
     range: (options) => {
