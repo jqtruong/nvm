@@ -16,7 +16,6 @@ var Helper = (function() {
 ///////////
 
 Array.prototype.toRgba = function() {
-    console.log('this is', this);
     return {
         r: this[0],
         g: this[1],

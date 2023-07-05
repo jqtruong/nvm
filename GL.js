@@ -65,6 +65,7 @@ var GL = (() => {
         },
 
         drawArrays: function(mode, offset, num_verts) {
+            // vertices are lines, and i send 4 points to describe a line...
             return _glCtx.drawArrays(_glCtx[mode], offset, num_verts);
         },
 

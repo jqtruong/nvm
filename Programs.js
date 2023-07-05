@@ -1,29 +1,14 @@
-var Programs = (() => {
+var CH1_X = -.5;
+var CH2_X =  .5;
+var COLOR1 = [1, .4, .2, .1].toRgba();
+var COLOR2 = [.2, .4, 1, .1].toRgba();
 
-    var color1 = [1, .4, .2, .1].toRgba();
-    var color2 = [.2, .4, 1, .1].toRgba();
+var Programs = (() => {
 
     var PROGRAMS = [
         {
             name: 'programs/channel',
-            params: [
-                {
-                    color: color1,
-                    vertices: null,
-                },
-                {
-                    color: color2,
-                    vertices: null,
-                },
-                {
-                    color: color1,
-                    vertices: null,
-                },
-                {
-                    color: color2,
-                    vertices: null,
-                },
-            ],
+            params: [],
         },
     ];
 
@@ -38,9 +23,9 @@ var Programs = (() => {
         l({PROGRAMS});
         const programs = _programNames();
         return Load.json('adele')
-            .then(json => _parseJson(json, [0, 1]))
-            .then(() => Load.json('agad'))
-            .then(json => _parseJson(json, [2, 3]))
+            .then(json => _parseJson(json))
+            // .then(() => Load.json('agad'))
+            // .then(json => _parseJson(json, [2, 3]))
             .then(() => window['Load'].scripts(programs, 'init'));
     }
 
@@ -61,25 +46,31 @@ var Programs = (() => {
         }
     }
 
-    function _parseJson(json, paramIds) {
+    function _parseJson(json) {
         if (!json) return Promise.reject('no json');
 
-        var frames = Math.interpolate.range({
-            input: [0, json.duration],
-            output:[1, -1],
-            step: 1/json.rate,
-        });
+        var [ ch1, ch2 ] = json;
 
-        l(Math.interpolate.value({
-            offset: -1,
-            i: 1,
-            ratio: 1,
-        }));
-
-        // PROGRAMS[0].params[paramIds[0]].vertices =
-        // PROGRAMS[0].params[paramIds[1]].vertices =
+        PROGRAMS[0].params.push({ color: COLOR1, vertices: _vertices(ch1, CH1_X) });
+        PROGRAMS[0].params.push({ color: COLOR2, vertices: _vertices(ch2, CH2_X) });
 
         return Promise.resolve('testing');
+    }
+
+    function _vertices(ch, x) {
+        let ratio = 2/ch.length
+        let vertices = '';
+        let y = 0;
+
+        ch.forEach((wav, i) => {
+            w = x + wav;
+            y = 1 - i * ratio;
+            vertices += ` ${x} ${y}
+                          ${w} ${y} `; // space intended
+        });
+
+        let _vertices = vertices.toFloat32Array();
+        return vertices.toFloat32Array();
     }
 
     /* Returns array of program names. */

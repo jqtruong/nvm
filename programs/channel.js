@@ -1,12 +1,15 @@
+/*
+ * draw one channel's WAV values.
+ */
 window[`programs/channel`] = (() => {
     var _uColor = null;
     var _aPosition = null;
     var _program = null;
-    var _VPF = 2; // number of vertices per frame
 
     return {
         init: function() {
-            return window['GL'].setupProgram('default', 'colored').then(finishInit);
+            return window['GL'].setupProgram( 'default', 'colored')
+                               .then(finishInit);
         },
 
         render: function({ color, vertices }) {
@@ -18,7 +21,7 @@ window[`programs/channel`] = (() => {
                 _uColor,
                 color.r, color.g, color.b, color.a
             );
-            window['GL'].drawArrays(LINES, 0, _frames.length * _VPF);
+            window['GL'].drawArrays(LINES, 0, vertices.length/2);
         },
     };
 
