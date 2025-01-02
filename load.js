@@ -32,10 +32,7 @@ var Load = (() => {
                 link.rel = 'stylesheet';
                 link.type = 'text/css';
                 link.href = `${name}.css`;
-                // link.href = `${V}/${name}.css`;
                 link.onload = () => ok(true);
-
-                // l('CSS
                 Head.appendChild(link);
             })
         },
@@ -66,7 +63,7 @@ var Load = (() => {
         l('loading script', filename);
         return new Promise((ok, argh) => {
             let script = document.createElement('script');
-            script.src = filename;
+            script.src = `framework/${filename}`;
             script.onload = _onScriptLoad(name, ok, argh, callback);
             script.onerror = _onScriptError(name, argh);
             Body.appendChild(script);

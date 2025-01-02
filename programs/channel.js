@@ -1,7 +1,7 @@
 /*
  * draw one channel's WAV values.
  */
-window[`programs/channel`] = (() => {
+window['../programs/channel'] = (() => {
     var _uColor = null;
     var _aPosition = null;
     var _program = null;

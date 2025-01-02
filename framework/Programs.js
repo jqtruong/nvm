@@ -1,13 +1,16 @@
-var CH1_X = -.5;
-var CH2_X =  .5;
-var COLOR1 = [1, .4, .2, .1].toRgba();
-var COLOR2 = [.2, .4, 1, .1].toRgba();
+var CH1_X = 0; //-.5;
+var CH2_X = 0; // .5;
+var COLOR_1 = [.1, .4, .2, .1].toRgba();
+var COLOR_2 = [.2, .4, 1, .1].toRgba();
+var COLOR_RED = [1, 0, 0, .5].toRgba();
+var COLOR_GREEN = [0, 1, 0, .5].toRgba();
+var COLOR_BLUE = [0, 0, 1, .5].toRgba();
 
 var Programs = (() => {
 
     var PROGRAMS = [
         {
-            name: 'programs/channel',
+            name: '../programs/channel',
             params: [],
         },
     ];
@@ -51,25 +54,23 @@ var Programs = (() => {
 
         var [ ch1, ch2 ] = json;
 
-        PROGRAMS[0].params.push({ color: COLOR1, vertices: _vertices(ch1, CH1_X) });
-        PROGRAMS[0].params.push({ color: COLOR2, vertices: _vertices(ch2, CH2_X) });
+        PROGRAMS[0].params.push({ color: COLOR_1, vertices: _vertices(ch1, CH1_X) });
+        PROGRAMS[0].params.push({ color: COLOR_2, vertices: _vertices(ch2, CH2_X) });
 
         return Promise.resolve('testing');
     }
 
     function _vertices(ch, x) {
-        let ratio = 2/ch.length
-        let vertices = '';
-        let y = 0;
+        var ratio = 2/ch.length
+        var vertices = '';
 
         ch.forEach((wav, i) => {
-            w = x + wav;
-            y = 1 - i * ratio;
+            var w = x + wav;
+            var y = 1 - i * ratio;
             vertices += ` ${x} ${y}
                           ${w} ${y} `; // space intended
         });
 
-        let _vertices = vertices.toFloat32Array();
         return vertices.toFloat32Array();
     }
 
